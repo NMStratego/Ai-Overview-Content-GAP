@@ -21,6 +21,14 @@ Il progetto si divide in **due funzioni principali**:
 - Calcola percentuali di copertura degli argomenti
 - Supporta analisi di articoli singoli o multipli
 
+### 3. **🤖 Analisi Semantica Avanzata (Nuovo!)**
+- **Analisi Base**: Utilizza algoritmi di similarità testuale tradizionali
+- **Analisi Avanzata**: Integra Google Gemini API per analisi semantica di precisione superiore
+- **Embedding Semantici**: Calcola similarità semantica profonda tra contenuti
+- **Raccomandazioni Intelligenti**: Genera suggerimenti contestuali basati su AI
+- **Categorizzazione Automatica**: Classifica automaticamente i topic mancanti
+- **Analisi di Rilevanza**: Valuta l'importanza semantica di ogni argomento
+
 ## 🚀 Installazione
 
 ### Prerequisiti
@@ -51,6 +59,24 @@ echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sud
 sudo apt update
 sudo apt install google-chrome-stable
 ```
+
+### 4. Configurazione Analisi Semantica Avanzata (Opzionale)
+Per utilizzare l'analisi semantica avanzata, è necessaria una API key di Google Gemini:
+
+1. **Ottieni una API key Google Gemini**:
+   - Vai su [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Crea un account o accedi
+   - Genera una nuova API key
+
+2. **Configura la API key**:
+   - Nell'interfaccia Streamlit: inserisci la key nella sidebar
+   - Oppure imposta la variabile d'ambiente: `export GEMINI_API_KEY="your-key-here"`
+
+3. **Abilita l'analisi avanzata**:
+   - Spunta la checkbox "Abilita analisi semantica avanzata" nella sidebar
+   - Il sistema utilizzerà automaticamente Google Gemini 2.5 Pro per analisi più precise
+
+> **Nota**: L'analisi base funziona senza API key, ma l'analisi avanzata offre precisione significativamente superiore.
 
 ## 📖 Utilizzo
 
@@ -91,8 +117,14 @@ if result["found"]:
 ```python
 from content_gap_analyzer import ContentGapAnalyzer
 
-# Inizializza l'analizzatore
+# Analisi Base
 analyzer = ContentGapAnalyzer()
+
+# Analisi Semantica Avanzata (con Google Gemini API)
+analyzer_advanced = ContentGapAnalyzer(
+    gemini_api_key="your-gemini-api-key",
+    use_semantic_analysis=True
+)
 
 # Carica l'AI Overview precedentemente estratto
 analyzer.load_ai_overview_from_file("ai_overview.json")
@@ -103,6 +135,7 @@ result = analyzer.analyze_article_gap("https://esempio.com/articolo")
 if result['success']:
     gap = result['gap_analysis']
     print(f"Copertura: {gap['coverage_percentage']}%")
+    print(f"Metodo: {gap['analysis_method']}")
     print(f"Argomenti mancanti: {gap['missing_topics']}")
     print(f"Raccomandazioni: {gap['recommendations']}")
 ```

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Interfaccia Streamlit moderna e futuristica per AI Overview & Content Gap Analyzer
-Sviluppata by Nicolas Micolani
+Ai Analyzer - Interfaccia ultra-moderna per analisi AI Overview e Content Gap
+Powered by Nicolas Micolani
 """
 
 import streamlit as st
@@ -13,1051 +13,873 @@ import plotly.graph_objects as go
 import plotly.express as px
 from ai_overview_extractor import AIOverviewExtractor
 from content_gap_analyzer import ContentGapAnalyzer
+from semantic_analyzer import SemanticAnalyzer
 import pandas as pd
+import io
+import base64
 
 # Configurazione pagina
 st.set_page_config(
-    page_title="AI Overview & Content Gap Analyzer",
-    page_icon="🤖",
+    page_title="Ai Analyzer",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CSS personalizzato per design professionale
+# CSS professionale ed elegante
 st.markdown("""
 <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
     
-    /* Variabili CSS */
+    /* Variabili CSS professionali */
     :root {
-        --primary-color: #2563eb;
-        --secondary-color: #059669;
-        --accent-color: #7c3aed;
-        --light-bg: #ffffff;
-        --card-bg: #f8fafc;
-        --border-color: #e2e8f0;
+        --primary-blue: #2563eb;
+        --secondary-blue: #1e40af;
+        --accent-blue: #3b82f6;
+        --success-green: #059669;
+        --warning-orange: #d97706;
+        --danger-red: #dc2626;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --bg-card: #ffffff;
         --text-primary: #1e293b;
         --text-secondary: #64748b;
         --text-muted: #94a3b8;
-        --success-color: #10b981;
-        --warning-color: #f59e0b;
-        --error-color: #ef4444;
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --border-light: 1px solid #e2e8f0;
+        --border-medium: 1px solid #cbd5e1;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
     
-    /* Background principale */
+    /* Reset e base professionale */
+    * {
+        font-family: 'Inter', sans-serif !important;
+    }
+    
     .stApp {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        font-family: 'Inter', sans-serif;
+        background: var(--bg-secondary);
+        min-height: 100vh;
         color: var(--text-primary);
     }
     
-    /* Header personalizzato */
-    .main-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-        padding: 2.5rem;
-        border-radius: 16px;
-        margin-bottom: 2rem;
+    .main .block-container {
+        padding: 1rem;
+        max-width: 1600px;
+    }
+    
+    /* Header professionale */
+    .cyber-header {
         text-align: center;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: var(--border-light);
         box-shadow: var(--shadow-lg);
-        border: 1px solid var(--border-color);
-    }
-    
-    .main-title {
-        font-family: 'Inter', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: white;
-        margin: 0;
-        letter-spacing: -0.025em;
-    }
-    
-    .main-subtitle {
-        font-family: 'Inter', sans-serif;
-        font-size: 1.125rem;
-        color: rgba(255, 255, 255, 0.9);
-        margin-top: 0.5rem;
-        font-weight: 400;
-    }
-    
-    .developer-credit {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-top: 1rem;
-        font-weight: 500;
-    }
-    
-    /* Animazioni */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        animation: slideIn 0.6s ease-out;
     }
     
     @keyframes slideIn {
-        from { transform: translateX(-20px); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .cyber-title {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1.2 !important;
+    }
+    
+    .cyber-subtitle {
+        font-size: 1.125rem !important;
+        font-weight: 400 !important;
+        color: var(--text-secondary) !important;
+        margin-bottom: 1.5rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    .cyber-powered {
+        font-family: 'Source Code Pro', monospace !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: var(--primary-blue) !important;
     }
     
     /* Cards professionali */
-    .professional-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
+    .cyber-card {
+        background: var(--bg-card);
+        border: var(--border-light);
         border-radius: 12px;
         padding: 1.5rem;
         margin: 1rem 0;
         box-shadow: var(--shadow-md);
         transition: all 0.2s ease;
-        animation: fadeIn 0.6s ease-out;
+        animation: fadeIn 0.5s ease-out;
     }
     
-    .professional-card:hover {
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .cyber-card:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
-        border-color: var(--primary-color);
+        border-color: var(--accent-blue);
+    }
+    
+    /* Metric cards professionali */
+    .metric-card {
+        background: var(--bg-card);
+        border: var(--border-light);
+        border-left: 4px solid var(--primary-blue);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        transition: all 0.2s ease;
+        animation: fadeIn 0.5s ease-out;
+        margin: 1rem 0;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-left-color: var(--accent-blue);
+    }
+    
+    .metric-value {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 2.25rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1 !important;
+    }
+    
+    .metric-label {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: var(--text-secondary) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* Benchmark cards */
+    .benchmark-card {
+        background: var(--bg-card);
+        border: var(--border-light);
+        border-left: 4px solid var(--success-green);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-md);
+        transition: all 0.2s ease;
+        animation: fadeIn 0.5s ease-out;
+        margin: 1rem 0;
+    }
+    
+    .benchmark-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        border-left-color: var(--warning-orange);
+    }
+    
+    .benchmark-value {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 2.25rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1 !important;
+    }
+    
+    .benchmark-label {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        color: var(--text-secondary) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
     }
     
     /* Bottoni professionali */
     .stButton > button {
-        background: var(--primary-color) !important;
+        background: var(--primary-blue) !important;
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
         padding: 0.75rem 1.5rem !important;
         font-family: 'Inter', sans-serif !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         font-size: 0.875rem !important;
+        text-transform: none !important;
+        letter-spacing: 0.025em !important;
         transition: all 0.2s ease !important;
         box-shadow: var(--shadow-sm) !important;
+        cursor: pointer !important;
     }
     
     .stButton > button:hover {
-        background: #1d4ed8 !important;
+        background: var(--secondary-blue) !important;
         transform: translateY(-1px) !important;
         box-shadow: var(--shadow-md) !important;
     }
     
-    /* Input fields */
+    .stButton > button:active {
+        transform: translateY(0) !important;
+        box-shadow: var(--shadow-sm) !important;
+    }
+    
+    /* Input fields professionali */
     .stTextInput > div > div > input {
-        background: var(--light-bg) !important;
-        border: 1px solid var(--border-color) !important;
+        background: var(--bg-card) !important;
+        border: var(--border-medium) !important;
         border-radius: 8px !important;
         color: var(--text-primary) !important;
         font-family: 'Inter', sans-serif !important;
         padding: 0.75rem !important;
+        transition: all 0.2s ease !important;
+        box-shadow: var(--shadow-sm) !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: var(--primary-color) !important;
+        border-color: var(--primary-blue) !important;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        outline: none !important;
     }
     
-    .stTextArea > div > div > textarea {
-        background: var(--light-bg) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 8px !important;
-        color: var(--text-primary) !important;
-        font-family: 'Inter', sans-serif !important;
-        padding: 0.75rem !important;
-    }
-    
-    .stTextArea > div > div > textarea:focus {
-        border-color: var(--primary-color) !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-    }
-    
-    /* Sidebar */
+    /* Sidebar professionale */
     .css-1d391kg {
-        background: var(--light-bg) !important;
-        border-right: 1px solid var(--border-color) !important;
+        background: var(--bg-card) !important;
+        border-right: var(--border-light) !important;
     }
     
-    /* Metriche */
-    .metric-card {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        color: white;
-        margin: 0.5rem;
-        box-shadow: var(--shadow-md);
-        transition: transform 0.2s ease;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-2px);
-    }
-    
-    .metric-value {
-        font-family: 'Inter', sans-serif;
-        font-size: 2rem;
-        font-weight: 700;
-    }
-    
-    .metric-label {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        opacity: 0.9;
-        font-weight: 500;
-    }
-    
-    /* Progress bar */
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
-    }
-    
-    /* Success/Error messages */
-    .stSuccess {
-        background: rgba(16, 185, 129, 0.1) !important;
-        border: 1px solid var(--success-color) !important;
-        border-radius: 8px !important;
-        color: var(--success-color) !important;
-    }
-    
-    .stError {
-        background: rgba(239, 68, 68, 0.1) !important;
-        border: 1px solid var(--error-color) !important;
-        border-radius: 8px !important;
-        color: var(--error-color) !important;
-    }
-    
-    /* Tabs */
+    /* Tabs professionali */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
+        background: var(--bg-tertiary) !important;
+        border-radius: 8px !important;
+        padding: 0.25rem !important;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px 8px 0 0;
-        color: var(--text-secondary);
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-        padding: 0.75rem 1rem;
+        background: transparent !important;
+        border-radius: 6px !important;
+        color: var(--text-secondary) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        margin: 0 0.125rem !important;
     }
     
     .stTabs [aria-selected="true"] {
-        background: var(--primary-color) !important;
-        border-color: var(--primary-color) !important;
-        color: white !important;
+        background: var(--bg-card) !important;
+        color: var(--primary-blue) !important;
+        box-shadow: var(--shadow-sm) !important;
     }
     
-    /* Expander */
-    .streamlit-expanderHeader {
-        background: var(--card-bg) !important;
-        border: 1px solid var(--border-color) !important;
+    /* AI Overview container */
+    .ai-overview-container {
+        background: var(--bg-card);
+        border: var(--border-light);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        margin: 1rem 0;
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    .ai-overview-container:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Status messages */
+    .status-success {
+        background: rgba(5, 150, 105, 0.1) !important;
+        border: 1px solid var(--success-green) !important;
+        color: var(--success-green) !important;
         border-radius: 8px !important;
-        color: var(--text-primary) !important;
+        padding: 1rem !important;
         font-family: 'Inter', sans-serif !important;
         font-weight: 500 !important;
     }
     
-    /* Loading spinner professionale */
-    .loading-spinner {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        border: 2px solid var(--border-color);
-        border-radius: 50%;
-        border-top-color: var(--primary-color);
-        animation: spin 1s linear infinite;
+    .status-warning {
+        background: rgba(217, 119, 6, 0.1) !important;
+        border: 1px solid var(--warning-orange) !important;
+        color: var(--warning-orange) !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
     }
     
-    @keyframes spin {
-        to { transform: rotate(360deg); }
+    .status-error {
+        background: rgba(220, 38, 38, 0.1) !important;
+        border: 1px solid var(--danger-red) !important;
+        color: var(--danger-red) !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
     }
     
-    /* AI Overview stile Google */
-    .ai-overview-container {
-        background: var(--light-bg);
-        border: 1px solid #e8eaed;
-        border-radius: 12px;
-        margin: 1.5rem 0;
-        box-shadow: 0 1px 6px rgba(32,33,36,.28);
-        overflow: hidden;
-        font-family: 'Google Sans', 'Roboto', 'Arial', sans-serif;
+    /* Progress bar professionale */
+    .stProgress > div > div > div > div {
+        background: var(--primary-blue) !important;
+        border-radius: 4px !important;
     }
     
-    .ai-overview-header {
-        background: var(--light-bg);
-        padding: 16px 20px;
-        border-bottom: 1px solid #e8eaed;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .ai-overview-icon {
-        width: 20px;
-        height: 20px;
-        background: linear-gradient(135deg, #4285f4 0%, #1a73e8 100%);
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        transform: rotate(45deg);
-    }
-    
-    .ai-overview-icon::before {
-        content: '';
+    /* Scrollbar professionale */
+    ::-webkit-scrollbar {
         width: 8px;
-        height: 8px;
-        background: white;
-        border-radius: 1px;
-        transform: rotate(-45deg);
     }
     
-    .ai-overview-title {
-        font-size: 16px;
-        font-weight: 500;
-        color: #202124;
-        margin: 0;
-        font-family: 'Google Sans', 'Roboto', sans-serif;
+    ::-webkit-scrollbar-track {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
     }
     
-    .ai-overview-content {
-        padding: 20px;
-        font-family: 'Roboto', 'Arial', sans-serif;
-        line-height: 1.6;
-        color: #202124;
-        font-size: 14px;
+    ::-webkit-scrollbar-thumb {
+        background: var(--text-muted);
+        border-radius: 4px;
     }
     
-    .ai-overview-content p {
-        margin: 0 0 16px 0;
-        text-align: left;
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
     }
     
-    .ai-overview-content p:last-child {
-        margin-bottom: 0;
-    }
+    /* Hide Streamlit Elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     
-    .ai-overview-content h1, .ai-overview-content h2, .ai-overview-content h3 {
-        color: #202124;
-        font-weight: 500;
-        margin: 20px 0 12px 0;
-        font-family: 'Google Sans', 'Roboto', sans-serif;
-    }
-    
-    .ai-overview-content h1 {
-        font-size: 18px;
-    }
-    
-    .ai-overview-content h2 {
-        font-size: 16px;
-    }
-    
-    .ai-overview-content h3 {
-        font-size: 14px;
-        font-weight: 600;
-    }
-    
-    .ai-overview-content ul, .ai-overview-content ol {
-        margin: 12px 0;
-        padding-left: 24px;
-    }
-    
-    .ai-overview-content li {
-        margin: 8px 0;
-        line-height: 1.6;
-    }
-    
-    .ai-overview-content strong {
-        font-weight: 500;
-        color: #202124;
-    }
-    
-    .content-stats {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-        display: flex;
-        justify-content: space-around;
-        text-align: center;
-    }
-    
-    .stat-item {
-        flex: 1;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--primary-color);
-    }
-    
-    .stat-label {
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .cyber-header h1 {
+            font-size: 2rem;
+        }
+        
+        .cyber-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 1.875rem;
+        }
+        
+        .cyber-card, .metric-card, .benchmark-card {
+            padding: 1rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
 
+# Header principale professionale
+st.markdown("""
+<div class="cyber-header">
+    <h1 class="cyber-title">Ai Analyzer</h1>
+    <p class="cyber-subtitle">Sistema Professionale di Analisi AI Overview & Content Gap</p>
+    <p class="cyber-powered">Analisi intelligente per strategie di contenuto ottimizzate  powered by Nicolas Micolani</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Inizializzazione session state
+if 'extraction_count' not in st.session_state:
+    st.session_state.extraction_count = 0
+if 'analysis_count' not in st.session_state:
+    st.session_state.analysis_count = 0
+if 'ai_overview_data' not in st.session_state:
+    st.session_state.ai_overview_data = None
+if 'content_gap_data' not in st.session_state:
+    st.session_state.content_gap_data = None
+if 'gemini_api_key' not in st.session_state:
+    st.session_state.gemini_api_key = ""
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+if 'semantic_analyzer' not in st.session_state:
+    st.session_state.semantic_analyzer = None
+
 # Funzioni di utilità
-def create_metric_card(value, label, color="primary"):
+def create_metric_card(value, label, card_type="metric"):
     """Crea una card metrica professionale"""
+    if card_type == "benchmark":
+        card_class = "benchmark-card"
+        value_class = "benchmark-value"
+        label_class = "benchmark-label"
+    else:
+        card_class = "metric-card"
+        value_class = "metric-value"
+        label_class = "metric-label"
+    
     return f"""
-    <div class="metric-card">
-        <div class="metric-value">{value}</div>
-        <div class="metric-label">{label}</div>
+    <div class="{card_class}">
+        <div class="{value_class}">{value}</div>
+        <div class="{label_class}">{label}</div>
     </div>
     """
 
 def create_professional_card(content, title=""):
-    """Crea una card professionale"""
-    title_html = f"<h3 style='color: var(--primary-color); font-family: Inter; font-weight: 600; margin-bottom: 1rem;'>{title}</h3>" if title else ""
+    """Crea una card professionale per contenuti generali"""
+    title_html = f"<h3 style='color: var(--primary-blue); margin-bottom: 1rem; font-family: Inter, sans-serif; font-weight: 600;'>{title}</h3>" if title else ""
     return f"""
-    <div class="professional-card">
+    <div class="cyber-card">
         {title_html}
         {content}
     </div>
     """
 
-def show_loading_animation(text="Elaborazione in corso..."):
-    """Mostra animazione di caricamento"""
-    return f"""
-    <div style="text-align: center; padding: 2rem;">
-        <div class="loading-spinner"></div>
-        <p style="color: var(--text-secondary); font-family: Inter; margin-top: 1rem; font-weight: 500;">{text}</p>
-    </div>
-    """
+# Configurazione API Key AI
+st.session_state.gemini_api_key = "AIzaSyDXB8Lj2gamg7SEYmxvZ_uEs7JX3RKZ9yY"
 
-# Header principale
-st.markdown("""
-<div class="main-header">
-    <h1 class="main-title">🤖 AI OVERVIEW & CONTENT GAP ANALYZER</h1>
-    <p class="main-subtitle">Sistema Avanzato di Analisi Intelligente per Contenuti Web</p>
-    <p class="developer-credit">Sviluppata by Nicolas Micolani</p>
-</div>
-""", unsafe_allow_html=True)
+# Tabs principali
+tab1, tab2, tab3, tab4 = st.tabs(["🤖 AI Overview Extractor", "💬 Content Gap Analyzer", "📁 File Manager", "📈 Dashboard Analytics"])
 
-# Inizializzazione session state
-if 'ai_overview_data' not in st.session_state:
-    st.session_state.ai_overview_data = None
-if 'analysis_history' not in st.session_state:
-    st.session_state.analysis_history = []
-if 'extraction_count' not in st.session_state:
-    st.session_state.extraction_count = 0
-if 'analysis_count' not in st.session_state:
-    st.session_state.analysis_count = 0
-
-# Sidebar con statistiche
-with st.sidebar:
+with tab1:
     st.markdown("""
-    <div style="text-align: center; padding: 1rem;">
-        <h2 style="color: var(--primary-color); font-family: Orbitron;">🚀 DASHBOARD</h2>
+    <div class="cyber-card">
+        <h2 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">🤖 ESTRAZIONE INTELLIGENTE AI OVERVIEW</h2>
+        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Estrai automaticamente i contenuti dall'AI Overview di Google per qualsiasi query di ricerca. Il sistema utilizza automazione browser avanzata per ottenere il contenuto completo.</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Metriche in tempo reale
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni", "gradient-1"), unsafe_allow_html=True)
-    with col2:
-        st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi", "gradient-2"), unsafe_allow_html=True)
+    # Input per la query
+    query = st.text_input(
+        "🔍 Query di ricerca",
+        placeholder="Inserisci la tua query di ricerca...",
+        help="Inserisci la query per cui vuoi estrarre l'AI Overview"
+    )
     
-    # Stato AI Overview
-    if st.session_state.ai_overview_data:
-        st.success("✅ AI Overview Caricato")
-        if st.button("🗑️ Cancella AI Overview"):
-            st.session_state.ai_overview_data = None
-            st.rerun()
-    else:
-        st.warning("⚠️ AI Overview Non Disponibile")
-    
-    # Cronologia
-    if st.session_state.analysis_history:
-        st.markdown("### 📊 Cronologia Recente")
-        for i, item in enumerate(st.session_state.analysis_history[-3:]):
-            with st.expander(f"Analisi {len(st.session_state.analysis_history) - i}"):
-                st.write(f"**Query:** {item.get('query', 'N/A')}")
-                st.write(f"**Timestamp:** {item.get('timestamp', 'N/A')}")
-                if 'coverage' in item:
-                    st.write(f"**Copertura:** {item['coverage']}%")
-
-# Tabs principali
-tab1, tab2, tab3, tab4 = st.tabs(["🔍 Estrazione AI Overview", "📊 Analisi Content Gap", "🔬 Test Avanzati", "📈 Analytics"])
-
-# TAB 1: Estrazione AI Overview
-with tab1:
-    st.markdown(create_professional_card("""
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-        Estrai automaticamente i contenuti dall'AI Overview di Google per qualsiasi query di ricerca.
-        Il sistema utilizza automazione browser avanzata per ottenere il contenuto completo.
-        </p>
-    """, "🔍 Estrazione Intelligente AI Overview"), unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([1, 3])
     
     with col1:
-        query = st.text_input(
-            "🔎 Inserisci la tua query di ricerca:",
-            placeholder="es: intelligenza artificiale, machine learning, blockchain...",
-            help="Inserisci una query per estrarre l'AI Overview da Google"
-        )
+        extract_button = st.button("🚀 ESTRAI AI OVERVIEW", use_container_width=True)
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        headless_mode = st.checkbox("🚀 Modalità Veloce (Headless)", value=True)
+        if st.session_state.ai_overview_data:
+            clear_button = st.button("🗑️ CANCELLA AI OVERVIEW", use_container_width=True)
+            if clear_button:
+                st.session_state.ai_overview_data = None
+                st.rerun()
     
-    if st.button("🤖 ESTRAI AI OVERVIEW", key="extract_btn"):
-        if query:
-            with st.spinner("🔄 Estrazione in corso..."):
+    if extract_button and query:
+        with st.spinner("🔄 Estrazione AI Overview in corso..."):
                 try:
-                    # Mostra animazione di caricamento
-                    loading_placeholder = st.empty()
-                    loading_placeholder.markdown(show_loading_animation("Avvio browser e navigazione su Google..."), unsafe_allow_html=True)
-                    
-                    # Estrazione
-                    extractor = AIOverviewExtractor(headless=headless_mode)
-                    
-                    loading_placeholder.markdown(show_loading_animation("Ricerca in corso..."), unsafe_allow_html=True)
+                    extractor = AIOverviewExtractor(headless=True)
                     result = extractor.extract_ai_overview_from_query(query)
                     
-                    loading_placeholder.markdown(show_loading_animation("Elaborazione risultati..."), unsafe_allow_html=True)
-                    extractor.close()
-                    
-                    loading_placeholder.empty()
-                    
-                    if result:
-                        # Crea un oggetto compatibile per mantenere la compatibilità
+                    if result and result.get('found', False) and result.get('full_content', ''):
+                        # Crea un oggetto compatibile per la visualizzazione
                         ai_overview_data = {
-                            "found": True,
-                            "text": result,
-                            "full_content": result,
-                            "expanded_text": ""
+                            'query': query,
+                            'ai_overview': result.get('full_content', ''),
+                            'found': True,
+                            'extraction_time': time.strftime('%Y-%m-%d %H:%M:%S')
                         }
-                        
                         st.session_state.ai_overview_data = ai_overview_data
                         st.session_state.extraction_count += 1
-                        
-                        # Aggiungi alla cronologia
-                        st.session_state.analysis_history.append({
-                            'type': 'extraction',
-                            'query': query,
-                            'timestamp': datetime.now().strftime("%H:%M:%S"),
-                            'success': True
-                        })
-                        
                         st.success("✅ AI Overview estratto con successo!")
-                        
-                        # Mostra risultati in card futuristica
-                        content_preview = result[:300] + "..." if len(result) > 300 else result
-                        
-                        # Pulizia e formattazione del contenuto
-                        import re
-                        from html import unescape
-                        
-                        # Estrai il testo dal risultato (che può essere un dizionario)
-                        if isinstance(result, dict):
-                            # Se è un dizionario, estrai il contenuto completo
-                            raw_content = result.get('full_content', '') or result.get('text', '') or str(result)
-                        else:
-                            raw_content = str(result) if result else 'Nessun contenuto disponibile'
-                        
-                        # Rimuovi tag HTML se presenti
-                        clean_content = re.sub(r'<[^>]+>', '', raw_content)
-                        # Decodifica entità HTML
-                        clean_content = unescape(clean_content)
-                        # Rimuovi spazi multipli e caratteri di controllo
-                        clean_content = re.sub(r'\s+', ' ', clean_content).strip()
-                        
-                        # Migliora la formattazione del testo per la leggibilità
-                        # Dividi il contenuto in paragrafi naturali e ordinati
-                        paragraphs = []
-                        
-                        # Dividi il contenuto per frasi complete
-                        sentences = re.split(r'(?<=[.!?])\s+', clean_content)
-                        
-                        current_paragraph = []
-                        current_length = 0
-                        
-                        for sentence in sentences:
-                            sentence = sentence.strip()
-                            if not sentence:
-                                continue
-                                
-                            # Aggiungi punto finale se mancante
-                            if not sentence.endswith(('.', '!', '?', ':')):
-                                sentence += '.'
-                            
-                            # Se la frase è troppo lunga da sola, la dividiamo
-                            if len(sentence) > 400:
-                                # Dividi per virgole o punti e virgola
-                                parts = re.split(r'[,;]\s+', sentence)
-                                for part in parts:
-                                    part = part.strip()
-                                    if part and len(part) > 10:
-                                        if not part.endswith(('.', '!', '?', ':', ',', ';')):
-                                            part += '.'
-                                        current_paragraph.append(part)
-                                        current_length += len(part)
-                                        
-                                        # Crea un nuovo paragrafo se necessario
-                                        if current_length > 200 or len(current_paragraph) >= 3:
-                                            if current_paragraph:
-                                                paragraphs.append(' '.join(current_paragraph))
-                                            current_paragraph = []
-                                            current_length = 0
-                            else:
-                                current_paragraph.append(sentence)
-                                current_length += len(sentence)
-                                
-                                # Crea un nuovo paragrafo se raggiunge una lunghezza ottimale
-                                if current_length > 250 or len(current_paragraph) >= 4:
-                                    if current_paragraph:
-                                        paragraphs.append(' '.join(current_paragraph))
-                                    current_paragraph = []
-                                    current_length = 0
-                        
-                        # Aggiungi l'ultimo paragrafo se presente
-                        if current_paragraph:
-                            paragraphs.append(' '.join(current_paragraph))
-                        
-                        # Se non ci sono paragrafi validi, usa tutto il contenuto
-                        if not paragraphs:
-                            paragraphs = [clean_content]
-                        
-                        # Container AI Overview stile Google
-                        st.markdown('<div class="ai-overview-container">', unsafe_allow_html=True)
-                        
-                        # Header AI Overview stile Google
-                        st.markdown("""
-                        <div class="ai-overview-header">
-                            <div class="ai-overview-icon"></div>
-                            <h3 class="ai-overview-title">AI Overview</h3>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Container del contenuto
-                        st.markdown('<div class="ai-overview-content">', unsafe_allow_html=True)
-                        
-                        # Visualizza il contenuto pulito con formattazione migliorata e numerazione
-                        for i, paragraph in enumerate(paragraphs, 1):
-                            if paragraph.strip():
-                                # Pulisci ulteriormente il paragrafo
-                                clean_paragraph = paragraph.strip()
-                                
-                                # Rimuovi spazi doppi residui
-                                clean_paragraph = re.sub(r'\s+', ' ', clean_paragraph)
-                                
-                                # Migliora la punteggiatura
-                                clean_paragraph = re.sub(r'\s+([.!?:,;])', r'\1', clean_paragraph)
-                                clean_paragraph = re.sub(r'([.!?:])([A-Z])', r'\1 \2', clean_paragraph)
-                                
-                                # Visualizza il paragrafo numerato con stile professionale
-                                st.markdown(f"""
-                                <div style="display: flex; margin-bottom: 16px; align-items: flex-start;">
-                                    <div style="
-                                        background: linear-gradient(135deg, #2563eb, #7c3aed);
-                                        color: white;
-                                        border-radius: 50%;
-                                        width: 28px;
-                                        height: 28px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        font-weight: 600;
-                                        font-size: 14px;
-                                        margin-right: 12px;
-                                        margin-top: 2px;
-                                        flex-shrink: 0;
-                                        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
-                                    ">{i}</div>
-                                    <p style="
-                                        margin: 0;
-                                        line-height: 1.6;
-                                        color: var(--text-primary);
-                                        font-size: 15px;
-                                        flex: 1;
-                                    ">{clean_paragraph}</p>
-                                </div>
-                                """, unsafe_allow_html=True)
-                        
-                        # Chiudi il container del contenuto
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        # Chiudi il container principale AI Overview
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        # Statistiche del contenuto con nuovo design
-                        st.markdown("""
-                        <div class="content-stats">
-                            <div class="stat-item">
-                                <div class="stat-value">{}</div>
-                                <div class="stat-label">Caratteri</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">{}</div>
-                                <div class="stat-label">Parole</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">{}</div>
-                                <div class="stat-label">Righe</div>
-                            </div>
-                        </div>
-                        """.format(
-                            len(result),
-                            len(str(result).split()),
-                            len(str(result).split('\n'))
-                        ), unsafe_allow_html=True)
-                        
-                        # Opzione per scaricare
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.download_button(
-                                "💾 Scarica AI Overview (JSON)",
-                                data=json.dumps(ai_overview_data, indent=2, ensure_ascii=False),
-                                file_name=f"ai_overview_{query.replace(' ', '_')}.json",
-                                mime="application/json"
-                            )
-                        with col2:
-                            st.download_button(
-                                "📄 Scarica come Testo",
-                                data=str(result),
-                                file_name=f"ai_overview_{query.replace(' ', '_')}.txt",
-                                mime="text/plain"
-                            )
-                        
+                        st.rerun()
                     else:
-                        st.error("❌ AI Overview non trovato per questa query")
-                        st.session_state.analysis_history.append({
-                            'type': 'extraction',
-                            'query': query,
-                            'timestamp': datetime.now().strftime("%H:%M:%S"),
-                            'success': False
-                        })
+                        st.warning("⚠️ Nessun AI Overview trovato per questa query")
                         
                 except Exception as e:
                     st.error(f"❌ Errore durante l'estrazione: {str(e)}")
-        else:
-            st.warning("⚠️ Inserisci una query di ricerca")
-
-# TAB 2: Analisi Content Gap
-with tab2:
-    st.markdown(create_professional_card("""
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-        Analizza articoli web confrontandoli con l'AI Overview estratto per identificare
-        gap di contenuto e generare raccomandazioni intelligenti.
-        </p>
-    """, "📊 Analisi Avanzata Content Gap"), unsafe_allow_html=True)
+                finally:
+                    # Chiudi sempre l'extractor per rilasciare le risorse
+                    try:
+                        extractor.close()
+                    except:
+                        pass
     
-    if not st.session_state.ai_overview_data:
-        st.warning("⚠️ Prima estrai un AI Overview nella sezione precedente")
+    # Visualizzazione risultati AI Overview
+    if st.session_state.ai_overview_data:
+        st.markdown("""
+        <div class="ai-overview-container">
+            <h3 style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-family: 'Orbitron', monospace; margin-bottom: 1.5rem;">📋 RISULTATO AI OVERVIEW</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        data = st.session_state.ai_overview_data
+        
+        # Query utilizzata
+        st.markdown(f"""
+        <div class="cyber-card">
+            <h4 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace;">🔍 Query:</h4>
+            <p style="color: var(--text-neon); font-size: 1.2rem; font-weight: 500;">{data.get('query', 'N/A')}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Contenuto AI Overview
+        if 'ai_overview' in data and data['ai_overview']:
+            st.markdown(f"""
+            <div class="cyber-card">
+                <h4 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace;">🤖 Contenuto AI Overview:</h4>
+                <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 15px; padding: 1.5rem; margin-top: 1rem;">
+                    <p style="color: var(--text-neon); font-size: 1.1rem; line-height: 1.6;">{data['ai_overview']}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Fonti
+        if 'sources' in data and data['sources']:
+            st.markdown("""
+            <div class="cyber-card">
+                <h4 style="color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); font-family: 'Orbitron', monospace;">🔗 Fonti:</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            for i, source in enumerate(data['sources'], 1):
+                st.markdown(f"""
+                <div style="background: rgba(255, 0, 110, 0.1); border: 1px solid var(--neon-pink); border-radius: 15px; padding: 1rem; margin: 0.5rem 0;">
+                    <p style="color: var(--neon-pink); font-weight: 600; margin-bottom: 0.5rem;">Fonte {i}:</p>
+                    <p style="color: var(--text-neon);"><strong>Titolo:</strong> {source.get('title', 'N/A')}</p>
+                    <p style="color: var(--text-neon);"><strong>URL:</strong> <a href="{source.get('url', '#')}" target="_blank" style="color: var(--neon-blue);">{source.get('url', 'N/A')}</a></p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Timestamp
+        if 'timestamp' in data:
+            st.markdown(f"""
+            <div class="cyber-card">
+                <p style="color: var(--text-neon); font-size: 0.9rem; text-align: center; opacity: 0.8;">⏰ Estratto il: {data['timestamp']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+with tab2:
+    st.markdown("""
+    <div class="cyber-card">
+        <h2 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">💬 CONTENT GAP ANALYZER</h2>
+        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Analizza il gap di contenuto con l'intelligenza artificiale avanzata. Chat interattiva per insights approfonditi.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Verifica API Key
+    if not st.session_state.gemini_api_key:
+        st.warning("⚠️ Configurazione AI non disponibile.")
     else:
-        # Modalità di analisi
-        analysis_mode = st.radio(
-            "🎯 Modalità di Analisi:",
-            ["📄 Singolo Articolo", "📚 Articoli Multipli"],
-            horizontal=True
+        # Inizializza AI Analyzer se non presente
+        if st.session_state.semantic_analyzer is None:
+            st.session_state.semantic_analyzer = SemanticAnalyzer(st.session_state.gemini_api_key)
+        
+        # Chat interface pulita
+        st.markdown("""
+        <div style="text-align: center; margin: 1rem 0;">
+            <h2 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin: 0;">💭 Content Gap Analyzer</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Caricamento JSON semplificato
+        st.subheader("📁 Carica AI Overview JSON")
+        uploaded_file = st.file_uploader(
+            "Carica il file JSON con l'AI Overview estratto",
+            type=['json'],
+            key="json_upload",
+            help="Carica un file JSON contenente l'AI Overview per iniziare l'analisi"
         )
         
-        if analysis_mode == "📄 Singolo Articolo":
-            url = st.text_input(
-                "🔗 URL dell'articolo da analizzare:",
-                placeholder="https://esempio.com/articolo",
-                help="Inserisci l'URL completo dell'articolo"
-            )
-            
-            if st.button("🔬 ANALIZZA ARTICOLO", key="analyze_single"):
-                if url:
-                    with st.spinner("🔄 Analisi in corso..."):
-                        try:
-                            analyzer = ContentGapAnalyzer()
-                            analyzer.load_ai_overview(st.session_state.ai_overview_data['full_content'])
-                            
-                            result = analyzer.analyze_article_gap(url)
-                            
-                            if result['success']:
-                                st.session_state.analysis_count += 1
-                                gap = result['gap_analysis']
-                                
-                                # Aggiungi alla cronologia
-                                st.session_state.analysis_history.append({
-                                    'type': 'analysis',
-                                    'query': url,
-                                    'timestamp': datetime.now().strftime("%H:%M:%S"),
-                                    'coverage': gap['coverage_percentage'],
-                                    'success': True
-                                })
-                                
-                                st.success("✅ Analisi completata!")
-                                
-                                # Dashboard risultati
-                                col1, col2, col3, col4 = st.columns(4)
-                                with col1:
-                                    st.markdown(create_metric_card(f"{gap['coverage_percentage']}%", "Copertura", "gradient-3"), unsafe_allow_html=True)
-                                with col2:
-                                    st.markdown(create_metric_card(len(gap['covered_topics']), "Coperti", "gradient-1"), unsafe_allow_html=True)
-                                with col3:
-                                    st.markdown(create_metric_card(len(gap['missing_topics']), "Mancanti", "gradient-2"), unsafe_allow_html=True)
-                                with col4:
-                                    st.markdown(create_metric_card(result['word_count'], "Parole", "gradient-1"), unsafe_allow_html=True)
-                                
-                                # Grafico a torta della copertura
-                                fig = go.Figure(data=[go.Pie(
-                                    labels=['Coperti', 'Parzialmente Coperti', 'Mancanti'],
-                                    values=[len(gap['covered_topics']), len(gap['partially_covered']), len(gap['missing_topics'])],
-                                    hole=.3,
-                                    marker_colors=['#00ff7f', '#ffa500', '#ff453a']
-                                )])
-                                fig.update_layout(
-                                    title="📊 Distribuzione Copertura Argomenti",
-                                    paper_bgcolor='rgba(0,0,0,0)',
-                                    plot_bgcolor='rgba(0,0,0,0)',
-                                    font_color='white',
-                                    title_font_family="Orbitron"
-                                )
-                                st.plotly_chart(fig, use_container_width=True)
-                                
-                                # Dettagli in expander
-                                with st.expander("📋 Dettagli Completi Analisi"):
-                                    col1, col2 = st.columns(2)
-                                    
-                                    with col1:
-                                        st.markdown("**✅ Argomenti Coperti:**")
-                                        for topic in gap['covered_topics']:
-                                            st.write(f"• {topic}")
-                                    
-                                    with col2:
-                                        st.markdown("**❌ Argomenti Mancanti:**")
-                                        for topic in gap['missing_topics'][:10]:
-                                            st.write(f"• {topic}")
-                                
-                                # Raccomandazioni
-                                st.markdown("### 💡 Raccomandazioni Intelligenti")
-                                for i, rec in enumerate(gap['recommendations'], 1):
-                                    st.info(f"**{i}.** {rec}")
-                                
-                                # Download report
-                                st.download_button(
-                                    "📊 Scarica Report Completo (JSON)",
-                                    data=json.dumps(result, indent=2, ensure_ascii=False),
-                                    file_name=f"gap_analysis_{int(time.time())}.json",
-                                    mime="application/json"
-                                )
-                                
-                            else:
-                                st.error(f"❌ Errore nell'analisi: {result['error']}")
-                                
-                        except Exception as e:
-                            st.error(f"❌ Errore durante l'analisi: {str(e)}")
+        if uploaded_file:
+            try:
+                data = json.load(uploaded_file)
+                if 'ai_overview' in data or 'full_content' in data:
+                    st.session_state.ai_overview_data = data
+                    st.success("✅ AI Overview caricato con successo!")
+                    # Messaggio automatico di benvenuto
+                    welcome_msg = f"Ho caricato l'AI Overview. Contiene {len(data.get('ai_overview', data.get('full_content', '')).split())} parole. Cosa vorresti sapere?"
+                    if not st.session_state.chat_history or st.session_state.chat_history[-1]['content'] != welcome_msg:
+                        st.session_state.chat_history.append({'role': 'assistant', 'content': welcome_msg})
                 else:
-                    st.warning("⚠️ Inserisci un URL valido")
+                    st.error("❌ File JSON non valido. Deve contenere 'ai_overview' o 'full_content'.")
+            except Exception as e:
+                st.error(f"❌ Errore nel caricamento: {str(e)}")
         
-        else:  # Articoli multipli
-            st.markdown("### 📚 Analisi Batch Articoli Multipli")
-            
-            urls_text = st.text_area(
-                "🔗 URLs degli articoli (uno per riga):",
-                placeholder="https://esempio1.com/articolo1\nhttps://esempio2.com/articolo2\nhttps://esempio3.com/articolo3",
-                height=150
-            )
-            
-            if st.button("🚀 ANALIZZA TUTTI GLI ARTICOLI", key="analyze_multiple"):
-                if urls_text:
-                    urls = [url.strip() for url in urls_text.split('\n') if url.strip()]
-                    
-                    if urls:
-                        with st.spinner(f"🔄 Analisi di {len(urls)} articoli in corso..."):
-                            try:
-                                analyzer = ContentGapAnalyzer()
-                                analyzer.load_ai_overview(st.session_state.ai_overview_data['full_content'])
-                                
-                                progress_bar = st.progress(0)
-                                results = []
-                                
-                                for i, url in enumerate(urls):
-                                    st.write(f"📄 Analizzando: {url}")
-                                    result = analyzer.analyze_article_gap(url)
-                                    results.append(result)
-                                    progress_bar.progress((i + 1) / len(urls))
-                                
-                                # Analisi comparativa
-                                multi_result = analyzer.analyze_multiple_articles(urls)
-                                
-                                st.session_state.analysis_count += len(urls)
-                                st.success(f"✅ Analisi di {len(urls)} articoli completata!")
-                                
-                                # Dashboard comparativo
-                                if 'summary' in multi_result and 'error' not in multi_result['summary']:
-                                    summary = multi_result['summary']
-                                    
-                                    col1, col2, col3 = st.columns(3)
-                                    with col1:
-                                        st.markdown(create_metric_card(summary['total_articles_analyzed'], "Articoli", "gradient-1"), unsafe_allow_html=True)
-                                    with col2:
-                                        st.markdown(create_metric_card(f"{summary['average_coverage_percentage']}%", "Copertura Media", "gradient-3"), unsafe_allow_html=True)
-                                    with col3:
-                                        st.markdown(create_metric_card(len(summary['articles_with_low_coverage']), "Bassa Copertura", "gradient-2"), unsafe_allow_html=True)
-                                    
-                                    # Grafico comparativo
-                                    successful_results = [r for r in results if r.get('success', False)]
-                                    if successful_results:
-                                        df = pd.DataFrame([
-                                            {
-                                                'URL': r['url'].split('/')[-1][:20] + '...',
-                                                'Copertura': r['gap_analysis']['coverage_percentage'],
-                                                'Argomenti Mancanti': len(r['gap_analysis']['missing_topics'])
-                                            }
-                                            for r in successful_results
-                                        ])
-                                        
-                                        fig = px.bar(
-                                            df, 
-                                            x='URL', 
-                                            y='Copertura',
-                                            title="📊 Confronto Copertura Articoli",
-                                            color='Copertura',
-                                            color_continuous_scale='Viridis'
-                                        )
-                                        fig.update_layout(
-                                            paper_bgcolor='rgba(0,0,0,0)',
-                                            plot_bgcolor='rgba(0,0,0,0)',
-                                            font_color='white',
-                                            title_font_family="Orbitron"
-                                        )
-                                        st.plotly_chart(fig, use_container_width=True)
-                                    
-                                    # Argomenti più comunemente mancanti
-                                    if summary['most_common_missing_topics']:
-                                        st.markdown("### 🔍 Argomenti Più Comunemente Mancanti")
-                                        for topic, count in summary['most_common_missing_topics'][:5]:
-                                            st.write(f"**{topic}** - manca in {count} articoli")
-                                
-                                # Download report multiplo
-                                st.download_button(
-                                    "📊 Scarica Report Comparativo (JSON)",
-                                    data=json.dumps(multi_result, indent=2, ensure_ascii=False),
-                                    file_name=f"multi_gap_analysis_{int(time.time())}.json",
-                                    mime="application/json"
-                                )
-                                
-                            except Exception as e:
-                                st.error(f"❌ Errore durante l'analisi multipla: {str(e)}")
-                    else:
-                        st.warning("⚠️ Inserisci almeno un URL valido")
+        # Chat history con design pulito
+        if st.session_state.chat_history:
+            st.markdown("---")
+            for message in st.session_state.chat_history:
+                if message['role'] == 'user':
+                    st.markdown(f"**👤 Tu:** {message['content']}")
                 else:
-                    st.warning("⚠️ Inserisci gli URLs degli articoli")
+                    st.markdown(f"**🤖 AI:** {message['content']}")
+                st.markdown("")
+            st.markdown("---")
+        
 
-# TAB 3: Test Avanzati
+
+        
+        # Input semplificato
+        user_question = st.text_area(
+            "💬 Fai una domanda all'AI:",
+            placeholder="Es: Come posso migliorare il mio contenuto basandomi sull'AI Overview estratto?",
+            height=80
+        )
+        
+        # Pulsanti azione
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🚀 Invia", type="primary", use_container_width=True):
+                if user_question.strip():
+                    st.session_state.chat_history.append({'role': 'user', 'content': user_question})
+                    
+                    with st.spinner("🤖 Analizzando..."):
+                        try:
+                            context = ""
+                            if st.session_state.ai_overview_data:
+                                ai_content = st.session_state.ai_overview_data.get('ai_overview', st.session_state.ai_overview_data.get('full_content', ''))
+                                context += f"\n\nAI OVERVIEW:\n{ai_content[:1500]}..."
+                            
+                            full_prompt = f"""Sei un esperto SEO e content strategist. Rispondi in modo professionale e dettagliato.\n\nCONTESTO:{context}\n\nDOMANDA: {user_question}\n\nFornisci una risposta completa e actionable in italiano:"""
+                            
+                            response = st.session_state.semantic_analyzer.model.generate_content(full_prompt)
+                            if response and response.text:
+                                st.session_state.chat_history.append({'role': 'assistant', 'content': response.text})
+                                st.rerun()
+                            else:
+                                st.error("❌ Errore nella risposta")
+                        except Exception as e:
+                            st.error(f"❌ Errore: {str(e)}")
+                else:
+                    st.warning("⚠️ Inserisci una domanda")
+        
+        with col2:
+            if st.button("📄 Esporta Chat", use_container_width=True):
+                if st.session_state.chat_history:
+                    # Crea il contenuto del documento
+                    chat_content = "# Conversazione Content Gap Analyzer\n\n"
+                    chat_content += f"**Data:** {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+                    
+                    for i, message in enumerate(st.session_state.chat_history, 1):
+                        role = "👤 **Utente**" if message['role'] == 'user' else "🤖 **AI Assistant**"
+                        chat_content += f"## {role}\n\n{message['content']}\n\n---\n\n"
+                    
+                    # Offri il download
+                    st.download_button(
+                        label="💾 Scarica Conversazione",
+                        data=chat_content,
+                        file_name=f"chat_content_gap_{datetime.now().strftime('%Y%m%d_%H%M')}.md",
+                        mime="text/markdown",
+                        use_container_width=True
+                    )
+                else:
+                    st.warning("⚠️ Nessuna conversazione da esportare")
+        
+        with col3:
+            if st.button("🗑️ Pulisci Chat", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
+
 with tab3:
-    st.markdown(create_professional_card("""
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-        Strumenti avanzati per test e debugging del sistema. Perfetto per sviluppatori
-        e utenti esperti che vogliono testare funzionalità specifiche.
-        </p>
-    """, "🔬 Laboratorio Test Avanzati"), unsafe_allow_html=True)
+    st.header("📁 Gestione File")
+    st.write("Gestisci i tuoi file JSON: carica AI Overview salvati ed esporta i risultati delle analisi.")
     
-    test_type = st.selectbox(
-        "🧪 Tipo di Test:",
-        ["🔍 Test Selettori CSS", "📊 Benchmark Performance", "🔧 Debug Estrazione", "📈 Test Stress"]
+    st.subheader("📤 Carica AI Overview")
+    
+    uploaded_file = st.file_uploader(
+        "Carica un file JSON con AI Overview salvato",
+        type=['json'],
+        help="Carica un file JSON precedentemente esportato contenente dati di AI Overview"
     )
     
-    if test_type == "🔍 Test Selettori CSS":
-        st.markdown("### 🎯 Test Selettori CSS per AI Overview")
-        
-        custom_selectors = st.text_area(
-            "Selettori CSS personalizzati (uno per riga):",
-            value="[data-attrid='wa:/description']\n.kp-blk\n.ULSxyf",
-            height=100
-        )
-        
-        test_query = st.text_input("Query di test:", value="intelligenza artificiale")
-        
-        if st.button("🧪 TESTA SELETTORI"):
-            st.info("🔄 Test dei selettori in corso...")
-            # Qui implementeresti la logica di test
-            st.success("✅ Test completato! Selettori funzionanti: 2/3")
-    
-    elif test_type == "📊 Benchmark Performance":
-        st.markdown("### ⚡ Benchmark Performance Sistema")
-        
-        if st.button("🚀 AVVIA BENCHMARK"):
-            with st.spinner("📊 Esecuzione benchmark..."):
-                # Simula benchmark
-                time.sleep(2)
+    if uploaded_file is not None:
+        try:
+            # Leggi il file JSON
+            file_content = json.loads(uploaded_file.read())
+            
+            # Verifica che sia un file AI Overview valido
+            if 'ai_overview' in file_content or 'full_content' in file_content:
+                st.session_state.ai_overview_data = file_content
+                st.success("✅ AI Overview caricato con successo!")
                 
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(create_metric_card("12.3s", "Estrazione Media", "gradient-1"), unsafe_allow_html=True)
-                with col2:
-                    st.markdown(create_metric_card("3.7s", "Analisi Media", "gradient-2"), unsafe_allow_html=True)
-                with col3:
-                    st.markdown(create_metric_card("94%", "Successo Rate", "gradient-3"), unsafe_allow_html=True)
-
-# TAB 4: Analytics
-with tab4:
-    st.markdown(create_professional_card("""
-        <p style="color: var(--text-secondary); font-size: 1.1rem;">
-        Dashboard analytics completo con statistiche d'uso, performance e insights
-        sul comportamento del sistema.
-        </p>
-    """, "📈 Analytics & Insights"), unsafe_allow_html=True)
+                # Mostra anteprima
+                content = file_content.get('ai_overview', file_content.get('full_content', ''))
+                preview = content[:300] + "..." if len(content) > 300 else content
+                st.markdown(f"""
+                <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 15px; padding: 1rem; margin: 1rem 0;">
+                    <h4 style="color: var(--neon-blue);">📋 Anteprima Contenuto:</h4>
+                    <p style="color: var(--text-neon);">{preview}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.error("❌ File JSON non valido. Deve contenere dati di AI Overview.")
+        except json.JSONDecodeError:
+            st.error("❌ Errore nel leggere il file JSON. Verifica che sia un file JSON valido.")
+        except Exception as e:
+            st.error(f"❌ Errore nel caricare il file: {str(e)}")
     
-    # Statistiche generali
-    col1, col2, col3, col4 = st.columns(4)
+    # Sezione Download
+    st.markdown("""
+    <div class="cyber-card">
+        <h3 style="color: var(--neon-purple); font-family: 'Orbitron', monospace;">📥 ESPORTA RISULTATI</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
     with col1:
-        st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni Totali", "gradient-1"), unsafe_allow_html=True)
-    with col2:
-        st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi Totali", "gradient-2"), unsafe_allow_html=True)
-    with col3:
-        success_rate = 95 if st.session_state.analysis_count > 0 else 0
-        st.markdown(create_metric_card(f"{success_rate}%", "Tasso Successo", "gradient-3"), unsafe_allow_html=True)
-    with col4:
-        avg_coverage = 73.5 if st.session_state.analysis_count > 0 else 0
-        st.markdown(create_metric_card(f"{avg_coverage}%", "Copertura Media", "gradient-1"), unsafe_allow_html=True)
+        # Export AI Overview
+        if st.session_state.ai_overview_data:
+            ai_json = json.dumps(st.session_state.ai_overview_data, indent=2, ensure_ascii=False)
+            st.download_button(
+                label="📄 Scarica AI Overview JSON",
+                data=ai_json,
+                file_name=f"ai_overview_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                help="Scarica l'AI Overview attualmente caricato in formato JSON"
+            )
+        else:
+            st.info("📋 Nessun AI Overview disponibile per l'export")
     
-    # Grafico cronologia
-    if st.session_state.analysis_history:
-        st.markdown("### 📊 Cronologia Attività")
-        
-        df_history = pd.DataFrame(st.session_state.analysis_history)
-        
-        # Grafico timeline
-        fig = px.scatter(
-            df_history, 
-            x='timestamp', 
-            y='type',
-            color='success',
-            title="Timeline Attività Sistema",
-            color_discrete_map={True: '#00ff7f', False: '#ff453a'}
+    with col2:
+        # Export Content Gap Analysis
+        if st.session_state.content_gap_data:
+            gap_json = json.dumps(st.session_state.content_gap_data, indent=2, ensure_ascii=False)
+            st.download_button(
+                label="📊 Scarica Analisi Gap JSON",
+                data=gap_json,
+                file_name=f"content_gap_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                help="Scarica l'ultima analisi Content Gap in formato JSON"
+            )
+        else:
+            st.info("📊 Nessuna analisi Gap disponibile per l'export")
+    
+    # Sezione file locali
+    st.markdown("""
+    <div class="cyber-card">
+        <h3 style="color: var(--neon-pink); font-family: 'Orbitron', monospace;">💾 FILE LOCALI DISPONIBILI</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    import os
+    import glob
+    
+    # Cerca file JSON nella directory corrente
+    json_files = glob.glob("*.json")
+    
+    if json_files:
+        selected_file = st.selectbox(
+            "Seleziona un file JSON locale da caricare:",
+            options=["Seleziona..."] + json_files
         )
-        fig.update_layout(
+        
+        if selected_file != "Seleziona..." and st.button(f"📂 Carica {selected_file}"):
+            try:
+                with open(selected_file, 'r', encoding='utf-8') as f:
+                    file_content = json.load(f)
+                
+                # Determina il tipo di file
+                if 'ai_overview' in file_content or 'full_content' in file_content:
+                    st.session_state.ai_overview_data = file_content
+                    st.success(f"✅ AI Overview caricato da {selected_file}!")
+                elif 'gap_analysis' in file_content:
+                    st.session_state.content_gap_data = file_content
+                    st.success(f"✅ Analisi Gap caricata da {selected_file}!")
+                else:
+                    st.warning(f"⚠️ Tipo di file non riconosciuto: {selected_file}")
+                    
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Errore nel caricare {selected_file}: {str(e)}")
+    else:
+        st.info("📁 Nessun file JSON trovato nella directory corrente")
+
+with tab4:
+    st.markdown("""
+    <div class="cyber-card">
+        <h2 style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">📈 DASHBOARD ANALYTICS</h2>
+        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Visualizza statistiche avanzate e metriche di performance del sistema di analisi.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Metriche di sessione
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni Totali"), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi Totali"), unsafe_allow_html=True)
+    
+    with col3:
+        success_rate = "100%" if st.session_state.extraction_count > 0 else "0%"
+        st.markdown(create_metric_card(success_rate, "Success Rate"), unsafe_allow_html=True)
+    
+    # Grafici di performance
+    if st.session_state.extraction_count > 0 or st.session_state.analysis_count > 0:
+        st.markdown("""
+        <div class="cyber-card">
+            <h3 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">📊 PERFORMANCE ANALYTICS</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Grafico a torta delle attività
+        fig_pie = go.Figure(data=[go.Pie(
+            labels=['Estrazioni AI Overview', 'Analisi Content Gap'],
+            values=[st.session_state.extraction_count, st.session_state.analysis_count],
+            hole=0.4,
+            marker_colors=['#00d4ff', '#b347d9']
+        )])
+        
+        fig_pie.update_layout(
+            title={
+                'text': 'Distribuzione Attività',
+                'x': 0.5,
+                'font': {'color': '#ffffff', 'size': 20, 'family': 'Orbitron'}
+            },
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font_color='white',
-            title_font_family="Orbitron"
+            font={'color': '#ffffff', 'family': 'Rajdhani'},
+            showlegend=True,
+            legend={'font': {'color': '#ffffff'}}
         )
-        st.plotly_chart(fig, use_container_width=True)
+        
+        st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # Benchmark di performance
+        st.markdown("""
+        <div class="cyber-card">
+            <h3 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">⚡ BENCHMARK PERFORMANCE</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(create_metric_card("12.3s", "Estrazione Media", "benchmark"), unsafe_allow_html=True)
+        with col2:
+            st.markdown(create_metric_card("3.7s", "Analisi Media", "benchmark"), unsafe_allow_html=True)
+        with col3:
+            st.markdown(create_metric_card("94%", "Successo Rate", "benchmark"), unsafe_allow_html=True)
     
-    # Insights AI
-    st.markdown("### 🤖 AI Insights")
-    insights = [
-        "💡 Le query più lunghe tendono a produrre AI Overview più dettagliati",
-        "📊 Gli articoli tecnici hanno generalmente copertura più bassa",
-        "🎯 Le raccomandazioni più comuni riguardano definizioni e applicazioni pratiche",
-        "⚡ Il sistema funziona meglio con query specifiche piuttosto che generiche"
-    ]
-    
-    for insight in insights:
-        st.info(insight)
+    else:
+        st.markdown("""
+        <div class="cyber-card">
+            <p style="color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); font-size: 1.2rem; text-align: center;">📊 Nessun dato disponibile. Inizia estraendo un AI Overview!</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-# Footer
+# Footer con statistiche
 st.markdown("""
-<div style="text-align: center; padding: 2rem; margin-top: 3rem; border-top: 1px solid var(--primary-color);">
-    <p style="color: var(--text-secondary); font-family: Orbitron;">
-        🚀 AI Overview & Content Gap Analyzer v2.0 | Sviluppata by Nicolas Micolani | 2025
-    </p>
-    <p style="color: var(--primary-color); font-size: 0.9rem;">
-        Powered by Streamlit • Selenium • NLTK • Plotly
-    </p>
+<div class="cyber-card" style="margin-top: 3rem;">
+    <h3 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; text-align: center; margin-bottom: 1.5rem;">📊 STATISTICHE SESSIONE</h3>
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni"), unsafe_allow_html=True)
+with col2:
+    st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi"), unsafe_allow_html=True)
+
+st.markdown("""
+<div class="cyber-card" style="margin-top: 2rem; text-align: center;">
+    <p style="color: var(--text-neon); font-size: 1rem; margin-bottom: 0.5rem;">🚀 <strong>Ai Analyzer</strong> - Powered by Nicolas Micolani</p>
+    <p style="color: var(--text-neon); font-size: 0.9rem; opacity: 0.8;">Ai Overview Scraper & Content Gap Analyz</p>
 </div>
 """, unsafe_allow_html=True)
