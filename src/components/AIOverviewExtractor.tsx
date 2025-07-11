@@ -45,7 +45,7 @@ const AIOverviewExtractor: React.FC<AIOverviewExtractorProps> = ({
 
     try {
       // Chiama il backend Python reale con AIOverviewExtractor
-      const response = await fetch('http://localhost:5000/api/extract-ai-overview', {
+      const response = await fetch('/api/extract-ai-overview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
