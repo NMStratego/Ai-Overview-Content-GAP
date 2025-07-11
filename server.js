@@ -1,7 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const { spawn } = require('child_process');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import { spawn } from 'child_process';
+import path from 'path';
 
 const app = express();
 const PORT = 3001;
