@@ -500,37 +500,52 @@ with tab1:
             clear_button = st.button("🗑️ CANCELLA AI OVERVIEW", use_container_width=True)
             if clear_button:
                 st.session_state.ai_overview_data = None
-                st.rerun()
     
     if extract_button and query:
         with st.spinner("🔄 Estrazione AI Overview in corso..."):
-                try:
-                    extractor = AIOverviewExtractor(headless=True)
-                    result = extractor.extract_ai_overview_from_query(query)
+            extractor = None
+            try:
+                # Inizializza l'estrattore con timeout e gestione errori migliorata
+                extractor = AIOverviewExtractor(headless=True)
+                
+                # Estrazione diretta senza threading (risolve problemi greenlet)
+                print(f"🚀 Avvio estrazione AI Overview per: {query}")
+                result = extractor.extract_ai_overview_from_query(query)
+                
+                if result and result.get('found', False) and result.get('full_content', ''):
+                    # Crea un oggetto compatibile per la visualizzazione
+                    ai_overview_data = {
+                        'query': query,
+                        'ai_overview': result.get('full_content', ''),
+                        'found': True,
+                        'extraction_time': time.strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    st.session_state.ai_overview_data = ai_overview_data
+                    st.success("✅ AI Overview estratto con successo!")
+                else:
+                    st.warning("⚠️ Nessun AI Overview trovato per questa query")
                     
-                    if result and result.get('found', False) and result.get('full_content', ''):
-                        # Crea un oggetto compatibile per la visualizzazione
-                        ai_overview_data = {
-                            'query': query,
-                            'ai_overview': result.get('full_content', ''),
-                            'found': True,
-                            'extraction_time': time.strftime('%Y-%m-%d %H:%M:%S')
-                        }
-                        st.session_state.ai_overview_data = ai_overview_data
-
-                        st.success("✅ AI Overview estratto con successo!")
-                        st.rerun()
-                    else:
-                        st.warning("⚠️ Nessun AI Overview trovato per questa query")
-                        
-                except Exception as e:
-                    st.error(f"❌ Errore durante l'estrazione: {str(e)}")
-                finally:
-                    # Chiudi sempre l'extractor per rilasciare le risorse
+            except Exception as e:
+                st.error(f"❌ Errore durante l'estrazione: {str(e)}")
+                # Log dell'errore per debug
+                print(f"ERRORE ESTRAZIONE AI OVERVIEW: {str(e)}")
+                import traceback
+                print(f"STACK TRACE: {traceback.format_exc()}")
+                
+            finally:
+                # Chiudi sempre l'extractor per rilasciare le risorse
+                if extractor is not None:
                     try:
                         extractor.close()
-                    except:
-                        pass
+                        print("✅ Risorse browser rilasciate correttamente")
+                    except Exception as close_error:
+                        print(f"⚠️ Errore chiusura browser: {close_error}")
+                        # Forza la chiusura delle risorse
+                        try:
+                            if hasattr(extractor, 'playwright') and extractor.playwright:
+                                extractor.playwright.stop()
+                        except:
+                            pass
     
     # Visualizzazione risultati AI Overview
     if st.session_state.ai_overview_data:
@@ -685,7 +700,6 @@ Sono pronto ad analizzare questo AI Overview per identificare gap di contenuto e
                 
                 # Auto-switch al tab Content Gap Analyzer dopo 2 secondi
                 time.sleep(1)
-                st.rerun()
 
 with tab2:
     st.markdown("""
@@ -775,7 +789,6 @@ with tab2:
                             response = st.session_state.semantic_analyzer.model.generate_content(full_prompt)
                             if response and response.text:
                                 st.session_state.chat_history.append({'role': 'assistant', 'content': response.text})
-                                st.rerun()
                             else:
                                 st.error("❌ Errore nella risposta")
                         except Exception as e:
@@ -808,7 +821,6 @@ with tab2:
         with col3:
             if st.button("🗑️ Pulisci Chat", use_container_width=True):
                 st.session_state.chat_history = []
-                st.rerun()
 
 with tab3:
     st.markdown("""
@@ -935,7 +947,6 @@ with tab3:
                     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
                     st.success(f"✅ {file_data['name']} caricato e inviato al Content Gap Analyzer! ({timestamp})")
                     st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
-                    st.rerun()
             
             with col3:
                 # Usa callback con session state per gestire l'eliminazione
@@ -943,7 +954,6 @@ with tab3:
                 if st.button("🗑️", key=delete_key, help=f"Rimuovi {file_data['name']} dal magazzino", use_container_width=True):
                     # Imposta flag di eliminazione nel session state
                     st.session_state[f"to_delete_{file_id}"] = True
-                    st.rerun()
                 
                 # Controlla se c'è un file da eliminare
                 if st.session_state.get(f"to_delete_{file_id}", False):
@@ -953,7 +963,6 @@ with tab3:
                         # Rimuovi il flag di eliminazione
                         del st.session_state[f"to_delete_{file_id}"]
                         st.success(f"✅ {file_name} rimosso dal magazzino!")
-                        st.rerun()
                     else:
                         # Rimuovi il flag anche se il file non esiste
                         if f"to_delete_{file_id}" in st.session_state:
@@ -1048,7 +1057,6 @@ with tab3:
                         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
                         st.success(f"✅ {file} caricato e inviato al Content Gap Analyzer! ({timestamp})")
                         st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
-                        st.rerun()
                         
                     except Exception as e:
                         st.error(f"❌ Errore nel caricare {file}: {str(e)}")

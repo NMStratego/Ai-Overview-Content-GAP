@@ -265,15 +265,40 @@ class AIOverviewExtractor:
             print(f"❌ Errore gestione popup: {e}")
     
     def search_google(self, query):
-        """Esegue una ricerca su Google con Playwright"""
+        """Esegue una ricerca su Google con Playwright e timeout robusti"""
+        import time
+        search_start = time.time()
+        max_search_time = 20  # Timeout massimo per la ricerca
+        
         try:
             print(f"🔍 Ricerca: {query}")
+            print(f"⏰ Timeout ricerca: {max_search_time} secondi")
             
-            # Naviga a Google
-            self.page.goto("https://www.google.com", wait_until="domcontentloaded")
+            # Naviga a Google con timeout
+            try:
+                self.page.goto("https://www.google.com", wait_until="domcontentloaded", timeout=10000)
+                print("✅ Navigazione a Google completata")
+            except Exception as nav_error:
+                print(f"❌ Errore navigazione: {nav_error}")
+                return False
             
-            # Gestisci popup di consenso
-            self.handle_popups_and_captcha()
+            # Controlla timeout
+            if time.time() - search_start > max_search_time:
+                print("⏰ Timeout durante navigazione")
+                return False
+            
+            # Gestisci popup di consenso con timeout
+            try:
+                self.handle_popups_and_captcha()
+                print("✅ Popup gestiti")
+            except Exception as popup_error:
+                print(f"⚠️ Errore gestione popup: {popup_error}")
+                # Continua comunque
+            
+            # Controlla timeout
+            if time.time() - search_start > max_search_time:
+                print("⏰ Timeout dopo gestione popup")
+                return False
             
             # Trova e compila il campo di ricerca
             search_selectors = [
@@ -290,38 +315,64 @@ class AIOverviewExtractor:
                     if self.page.locator(selector).count() > 0:
                         search_box = self.page.locator(selector).first
                         if search_box.is_visible():
+                            print(f"✅ Campo ricerca trovato: {selector}")
                             break
-                except:
+                except Exception as selector_error:
+                    print(f"⚠️ Errore selettore {selector}: {selector_error}")
                     continue
             
             if not search_box:
-                raise Exception("Campo di ricerca non trovato")
+                print("❌ Campo di ricerca non trovato")
+                return False
+            
+            # Controlla timeout
+            if time.time() - search_start > max_search_time:
+                print("⏰ Timeout durante ricerca campo")
+                return False
             
             # Pulisci e inserisci la query
-            search_box.clear()
-            search_box.fill(query)
-            search_box.press("Enter")
+            try:
+                search_box.clear()
+                search_box.fill(query)
+                search_box.press("Enter")
+                print("✅ Query inviata")
+            except Exception as input_error:
+                print(f"❌ Errore inserimento query: {input_error}")
+                return False
             
-            # Attendi il caricamento dei risultati
-            self.page.wait_for_selector("div[id='search']", timeout=15000)
+            # Attendi il caricamento dei risultati con timeout ridotto
+            try:
+                self.page.wait_for_selector("div[id='search']", timeout=10000)
+                print("✅ Risultati caricati")
+            except Exception as results_error:
+                print(f"❌ Errore caricamento risultati: {results_error}")
+                return False
             
-            # Attendi che l'AI Overview si carichi se presente
-            self.page.wait_for_timeout(3000)
+            # Attendi che l'AI Overview si carichi se presente (timeout ridotto)
+            self.page.wait_for_timeout(2000)
             
-            print("✅ Ricerca completata")
+            search_duration = time.time() - search_start
+            print(f"✅ Ricerca completata in {search_duration:.2f} secondi")
             return True
             
         except Exception as e:
-            print(f"❌ Errore durante la ricerca: {e}")
+            search_duration = time.time() - search_start
+            print(f"❌ Errore durante la ricerca dopo {search_duration:.2f} secondi: {e}")
             return False
     
     def extract_ai_overview(self):
         """
-        Estrae il contenuto dell'AI Overview dalla pagina dei risultati con Playwright
+        Estrae il contenuto dell'AI Overview dalla pagina dei risultati con Playwright e timeout robusti
         
         Returns:
             dict: Dizionario contenente il testo dell'AI Overview
         """
+        import time
+        start_time = time.time()  # Definizione di start_time per il finally
+        extract_start = time.time()
+        max_extract_time = 25  # Timeout massimo per l'estrazione completa
+        timeout_seconds = max_extract_time  # Definizione di timeout_seconds per il controllo finale
+        
         ai_overview_content = {
             "found": False,
             "text": "",
@@ -331,6 +382,7 @@ class AIOverviewExtractor:
         
         try:
             print("🤖 Ricerca AI Overview...")
+            print(f"⏰ Timeout estrazione: {max_extract_time} secondi")
             
             # Selettori specifici per AI Overview aggiornati
             ai_overview_selectors = [
@@ -396,40 +448,62 @@ class AIOverviewExtractor:
                 
                 return False
             
-            for selector in ai_overview_selectors:
+            for idx, selector in enumerate(ai_overview_selectors):
+                # Controlla timeout ad ogni iterazione del selettore
+                if time.time() - extract_start > max_extract_time:
+                    print(f"⏰ Timeout durante ricerca selettore {idx+1}/{len(ai_overview_selectors)}")
+                    break
+                    
                 try:
+                    print(f"🔍 Testando selettore {idx+1}/{len(ai_overview_selectors)}: {selector[:50]}...")
+                    
                     elements = self.page.locator(selector)
                     count = min(elements.count(), 10)  # Aumentato a 10 elementi per selettore
                     
+                    if count > 0:
+                        print(f"✅ Trovati {count} elementi con questo selettore")
+                    
                     for i in range(count):
-                        element = elements.nth(i)
-                        if element.is_visible():
-                            text = element.inner_text().strip()
+                        # Controlla timeout anche nel loop interno
+                        if time.time() - extract_start > max_extract_time:
+                            print("⏰ Timeout durante analisi elementi")
+                            break
                             
-                            # Raccoglie tutto il contenuto significativo con deduplicazione meno aggressiva
-                            if (len(text) > 15 and 
-                                not is_duplicate_content(text, all_content) and
-                                # Esclude elementi di navigazione
-                                not any(nav_word in text.lower() for nav_word in [
-                                    'search', 'images', 'videos', 'news', 'shopping',
-                                    'maps', 'more', 'tools', 'settings', 'sign in'
-                                ])):
+                        try:
+                            element = elements.nth(i)
+                            if element.is_visible():  # Rimozione parametro timeout non supportato
+                                text = element.inner_text().strip()
                                 
-                                all_content.append(text)
-                                seen_content.add(text.lower().strip())
-                                if not ai_overview_element:
-                                    ai_overview_element = element
-                                    found_selector = selector
-                                
-                                # Aumentato il limite per catturare più contenuto
-                                if len(all_content) >= 20:
-                                    break
+                                # Raccoglie tutto il contenuto significativo con deduplicazione meno aggressiva
+                                if (len(text) > 15 and 
+                                    not is_duplicate_content(text, all_content) and
+                                    # Esclude elementi di navigazione
+                                    not any(nav_word in text.lower() for nav_word in [
+                                        'search', 'images', 'videos', 'news', 'shopping',
+                                        'maps', 'more', 'tools', 'settings', 'sign in'
+                                    ])):
+                                    
+                                    all_content.append(text)
+                                    seen_content.add(text.lower().strip())
+                                    if not ai_overview_element:
+                                        ai_overview_element = element
+                                        found_selector = selector
+                                        print(f"✅ Primo elemento AI Overview trovato: {len(text)} caratteri")
+                                    
+                                    # Aumentato il limite per catturare più contenuto
+                                    if len(all_content) >= 20:
+                                        print(f"📝 Raggiunto limite contenuti: {len(all_content)}")
+                                        break
+                        except Exception as element_error:
+                            print(f"⚠️ Errore elemento {i}: {element_error}")
+                            continue
                     
                     # Se abbiamo raggiunto il limite, usciamo dal loop principale
                     if len(all_content) >= 20:
                         break
                         
                 except Exception as e:
+                    print(f"⚠️ Errore selettore {selector[:50]}...: {e}")
                     continue
             
             # Se abbiamo raccolto contenuto da più elementi, lo combiniamo
@@ -448,11 +522,17 @@ class AIOverviewExtractor:
                     print("🔍 Ricerca pulsante 'Mostra altro' per contenuto combinato...")
             
             # Ricerca alternativa per contenuti AI in iframe o shadow DOM
-            if not ai_overview_element:
+            if not ai_overview_element and time.time() - extract_start < max_extract_time:
                 try:
+                    print("🔍 Ricerca in iframe...")
                     # Cerca in iframe
                     iframe_selectors = ["iframe[src*='ai']", "iframe[src*='overview']"]
                     for iframe_sel in iframe_selectors:
+                        # Controlla timeout
+                        if time.time() - extract_start > max_extract_time:
+                            print("⏰ Timeout durante ricerca iframe")
+                            break
+                            
                         if self.page.locator(iframe_sel).count() > 0:
                             frame = self.page.frame_locator(iframe_sel)
                             frame_content = frame.locator("body").inner_text()
@@ -462,32 +542,44 @@ class AIOverviewExtractor:
                                 print(f"✅ AI Overview trovato in iframe: {iframe_sel}")
                                 return ai_content
                 except Exception as e:
-                    print(f"Errore ricerca iframe: {e}")
+                    print(f"❌ Errore ricerca iframe: {e}")
                 
                 # Strategia di fallback: cerca elementi con molto testo
-                try:
-                    fallback_selectors = [
-                        "div[data-ved]:has-text('AI')",
-                        "div[data-ved]:has-text('intelligenza')",
-                        "div[data-ved]:has-text('artificial')",
-                        "div[id='search'] div"
-                    ]
-                    
-                    for fallback_sel in fallback_selectors:
-                        elements = self.page.locator(fallback_sel)
-                        for i in range(min(elements.count(), 5)):  # Controlla solo i primi 5
-                            element = elements.nth(i)
-                            if element.is_visible():
-                                text = element.inner_text().strip()
-                                if len(text) > 100 and not text.startswith('http'):
-                                    ai_overview_element = element
-                                    found_selector = f"fallback: {fallback_sel}"
-                                    print(f"✅ AI Overview trovato con fallback: {fallback_sel}")
+                if time.time() - extract_start < max_extract_time:
+                    try:
+                        print("🔍 Strategia fallback...")
+                        fallback_selectors = [
+                            "div[data-ved]:has-text('AI')",
+                            "div[data-ved]:has-text('intelligenza')",
+                            "div[data-ved]:has-text('artificial')",
+                            "div[id='search'] div"
+                        ]
+                        
+                        for fallback_sel in fallback_selectors:
+                            # Controlla timeout
+                            if time.time() - extract_start > max_extract_time:
+                                print("⏰ Timeout durante strategia fallback")
+                                break
+                                
+                            elements = self.page.locator(fallback_sel)
+                            for i in range(min(elements.count(), 5)):  # Controlla solo i primi 5
+                                # Controlla timeout anche nel loop interno
+                                if time.time() - extract_start > max_extract_time:
+                                    print("⏰ Timeout durante analisi fallback")
                                     break
-                        if ai_overview_element:
-                            break
-                except Exception as e:
-                    print(f"Errore strategia fallback: {e}")
+                                    
+                                element = elements.nth(i)
+                                if element.is_visible():
+                                    text = element.inner_text().strip()
+                                    if len(text) > 100 and not text.startswith('http'):
+                                        ai_overview_element = element
+                                        found_selector = f"fallback: {fallback_sel}"
+                                        print(f"✅ AI Overview trovato con fallback: {fallback_sel}")
+                                        break
+                            if ai_overview_element:
+                                break
+                    except Exception as e:
+                        print(f"❌ Errore strategia fallback: {e}")
             
             if ai_overview_element:
                 try:
@@ -704,11 +796,21 @@ class AIOverviewExtractor:
         except Exception as e:
             print(f"❌ Errore durante l'estrazione dell'AI Overview: {e}")
         
+        finally:
+            # Log finale del tempo di esecuzione
+            final_duration = time.time() - start_time
+            print(f"⏱️ Estrazione AI Overview completata in {final_duration:.2f} secondi")
+            
+            # Controllo finale timeout
+            if final_duration > timeout_seconds:
+                print(f"⚠️ ATTENZIONE: Estrazione ha superato il timeout di {timeout_seconds}s")
+        
         return ai_overview_content
     
     def extract_ai_overview_from_query(self, query):
         """
         Funzione principale che esegue la ricerca ed estrae l'AI Overview
+        con gestione robusta per prevenire loop infiniti su Render
         
         Args:
             query (str): La query di ricerca
@@ -716,27 +818,69 @@ class AIOverviewExtractor:
         Returns:
             str: Contenuto dell'AI Overview estratto o None se non trovato
         """
+        import time
+        start_time = time.time()
+        max_execution_time = 45  # Timeout massimo di 45 secondi
+        
         try:
             print(f"🔍 Ricerca di: {query}")
+            print(f"⏰ Timeout impostato: {max_execution_time} secondi")
             
-            # Esegui la ricerca
+            # Controlla timeout prima della ricerca
+            if time.time() - start_time > max_execution_time:
+                raise TimeoutError("Timeout durante l'inizializzazione")
+            
+            # Esegui la ricerca con timeout
+            print("🌐 Avvio ricerca Google...")
+            search_start = time.time()
+            
             if not self.search_google(query):
                 print("❌ Ricerca fallita")
                 return None
             
+            search_duration = time.time() - search_start
+            print(f"✅ Ricerca completata in {search_duration:.2f} secondi")
+            
+            # Controlla timeout prima dell'estrazione
+            if time.time() - start_time > max_execution_time:
+                raise TimeoutError("Timeout dopo la ricerca")
+            
             print("🤖 Estrazione dell'AI Overview...")
+            extraction_start = time.time()
+            
             ai_content = self.extract_ai_overview()
             
-            if ai_content:
+            extraction_duration = time.time() - extraction_start
+            total_duration = time.time() - start_time
+            
+            print(f"⏱️ Estrazione completata in {extraction_duration:.2f} secondi")
+            print(f"⏱️ Tempo totale: {total_duration:.2f} secondi")
+            
+            if ai_content and ai_content.get('found', False):
                 print("✅ AI Overview estratto con successo!")
                 return ai_content
             else:
                 print("❌ AI Overview non trovato")
                 return None
             
+        except TimeoutError as te:
+            print(f"⏰ Timeout raggiunto: {te}")
+            return None
+            
         except Exception as e:
             print(f"❌ Errore durante l'estrazione: {e}")
+            # Log dettagliato per debug su Render
+            import traceback
+            print(f"📋 Stack trace: {traceback.format_exc()}")
             return None
+            
+        finally:
+            total_time = time.time() - start_time
+            print(f"🏁 Processo completato in {total_time:.2f} secondi")
+            
+            # Forza garbage collection per liberare memoria
+            import gc
+            gc.collect()
     
     def save_to_file(self, content, filename):
         """
@@ -755,18 +899,54 @@ class AIOverviewExtractor:
     
     def close(self):
         """
-        Chiude il browser e rilascia le risorse
+        Chiude il browser e rilascia le risorse con gestione robusta per Render
         """
         try:
+            print("🔒 Iniziando chiusura risorse browser...")
+            
+            # Chiudi la pagina
             if hasattr(self, 'page') and self.page:
-                self.page.close()
+                try:
+                    self.page.close()
+                    print("✅ Pagina chiusa")
+                except Exception as e:
+                    print(f"⚠️ Errore chiusura pagina: {e}")
+                finally:
+                    self.page = None
+            
+            # Chiudi il browser
             if hasattr(self, 'browser') and self.browser:
-                self.browser.close()
+                try:
+                    self.browser.close()
+                    print("✅ Browser chiuso")
+                except Exception as e:
+                    print(f"⚠️ Errore chiusura browser: {e}")
+                finally:
+                    self.browser = None
+            
+            # Ferma Playwright
             if hasattr(self, 'playwright') and self.playwright:
-                self.playwright.stop()
-            print("🔒 Browser chiuso correttamente")
+                try:
+                    self.playwright.stop()
+                    print("✅ Playwright fermato")
+                except Exception as e:
+                    print(f"⚠️ Errore stop Playwright: {e}")
+                finally:
+                    self.playwright = None
+            
+            print("🔒 Tutte le risorse browser rilasciate correttamente")
+            
         except Exception as e:
             print(f"❌ Errore durante la chiusura: {e}")
+            # Forza la pulizia delle variabili anche in caso di errore
+            self.page = None
+            self.browser = None
+            self.playwright = None
+            
+        # Garbage collection forzato per Render
+        import gc
+        gc.collect()
+        print("🧹 Garbage collection eseguito")
 
 
 def main():
