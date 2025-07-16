@@ -697,9 +697,7 @@ Sono pronto ad analizzare questo AI Overview per identificare gap di contenuto e
                 
                 st.success("✅ AI Overview inviato al Content Gap Analyzer!")
                 st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
-                
-                # Auto-switch al tab Content Gap Analyzer dopo 2 secondi
-                time.sleep(1)
+                st.rerun()  # Forza aggiornamento UI su Render
 
 with tab2:
     st.markdown("""
@@ -743,6 +741,7 @@ with tab2:
                     welcome_msg = f"Ho caricato l'AI Overview. Contiene {len(data.get('ai_overview', data.get('full_content', '')).split())} parole. Cosa vorresti sapere?"
                     if not st.session_state.chat_history or st.session_state.chat_history[-1]['content'] != welcome_msg:
                         st.session_state.chat_history.append({'role': 'assistant', 'content': welcome_msg})
+                        st.rerun()  # Forza aggiornamento UI su Render
                 else:
                     st.error("❌ File JSON non valido. Deve contenere 'ai_overview' o 'full_content'.")
             except Exception as e:
@@ -789,6 +788,7 @@ with tab2:
                             response = st.session_state.semantic_analyzer.model.generate_content(full_prompt)
                             if response and response.text:
                                 st.session_state.chat_history.append({'role': 'assistant', 'content': response.text})
+                                st.rerun()  # Forza aggiornamento UI su Render
                             else:
                                 st.error("❌ Errore nella risposta")
                         except Exception as e:
@@ -821,6 +821,7 @@ with tab2:
         with col3:
             if st.button("🗑️ Pulisci Chat", use_container_width=True):
                 st.session_state.chat_history = []
+                st.rerun()  # Forza aggiornamento UI su Render
 
 with tab3:
     st.markdown("""
@@ -947,6 +948,7 @@ with tab3:
                     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
                     st.success(f"✅ {file_data['name']} caricato e inviato al Content Gap Analyzer! ({timestamp})")
                     st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
+                    st.rerun()  # Forza aggiornamento UI su Render
             
             with col3:
                 # Usa callback con session state per gestire l'eliminazione
