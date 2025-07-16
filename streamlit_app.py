@@ -17,10 +17,12 @@ from semantic_analyzer import SemanticAnalyzer
 import pandas as pd
 import io
 import base64
+import os
+import glob
 
 # Configurazione pagina
 st.set_page_config(
-    page_title="Ai Analyzer",
+    page_title="Stratego Ai Analyzer",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -72,13 +74,27 @@ st.markdown("""
     /* Header professionale */
     .cyber-header {
         text-align: center;
-        padding: 2.5rem 2rem;
+        padding: 1rem;
         margin-bottom: 2rem;
-        background: var(--bg-card);
-        border-radius: 12px;
-        border: var(--border-light);
-        box-shadow: var(--shadow-lg);
         animation: slideIn 0.6s ease-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+    
+    .header-logo {
+        margin-bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .header-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
     }
     
     @keyframes slideIn {
@@ -381,20 +397,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header principale professionale
-st.markdown("""
-<div class="cyber-header">
-    <h1 class="cyber-title">Ai Analyzer</h1>
-    <p class="cyber-subtitle">Sistema Professionale di Analisi AI Overview & Content Gap</p>
-    <p class="cyber-powered">Analisi intelligente per strategie di contenuto ottimizzate  powered by Nicolas Micolani</p>
-</div>
-""", unsafe_allow_html=True)
+# Configurazione dimensioni logo
+LOGO_HEIGHT = 300  # Modifica questo valore per cambiare le dimensioni del logo (in px)
+
+# Header principale professionale con logo
+import base64
+
+try:
+    # Carica e codifica il logo in base64
+    with open('/Users/niksmic/Desktop/AIOVER+2/Ai-Overview-Content-GAP/image/Logo Stratego  (1).svg', 'rb') as f:
+        logo_data = f.read()
+    logo_base64 = base64.b64encode(logo_data).decode()
+    
+    st.markdown(f"""
+    <div class="cyber-header">
+        <div class="header-logo">
+            <img src="data:image/svg+xml;base64,{logo_base64}" alt="Stratego Logo" style="height: {LOGO_HEIGHT}px; width: auto;">
+        </div>
+        <div class="header-content">
+            <h1 class="cyber-title"> STRATEGO SWAT AI ANALYZER</h1>
+            <p class="cyber-subtitle">Sistema Professionale di Analisi AI Overview & Content Gap</p>
+            <p class="cyber-powered">Analisi intelligente per strategie di contenuto ottimizzate</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+except (FileNotFoundError, Exception) as e:
+    # Fallback senza logo se il file non viene trovato o c'è un errore
+    st.markdown("""
+    <div class="cyber-header">
+        <div class="header-content">
+            <h1 class="cyber-title"> STRATEGO SWAT AI ANALYZER</h1>
+            <p class="cyber-subtitle">Sistema Professionale di Analisi AI Overview & Content Gap</p>
+            <p class="cyber-powered">Analisi intelligente per strategie di contenuto ottimizzate</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Inizializzazione session state
-if 'extraction_count' not in st.session_state:
-    st.session_state.extraction_count = 0
-if 'analysis_count' not in st.session_state:
-    st.session_state.analysis_count = 0
 if 'ai_overview_data' not in st.session_state:
     st.session_state.ai_overview_data = None
 if 'content_gap_data' not in st.session_state:
@@ -405,25 +444,10 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'semantic_analyzer' not in st.session_state:
     st.session_state.semantic_analyzer = None
+if 'uploaded_files' not in st.session_state:
+    st.session_state.uploaded_files = {}
 
 # Funzioni di utilità
-def create_metric_card(value, label, card_type="metric"):
-    """Crea una card metrica professionale"""
-    if card_type == "benchmark":
-        card_class = "benchmark-card"
-        value_class = "benchmark-value"
-        label_class = "benchmark-label"
-    else:
-        card_class = "metric-card"
-        value_class = "metric-value"
-        label_class = "metric-label"
-    
-    return f"""
-    <div class="{card_class}">
-        <div class="{value_class}">{value}</div>
-        <div class="{label_class}">{label}</div>
-    </div>
-    """
 
 def create_professional_card(content, title=""):
     """Crea una card professionale per contenuti generali"""
@@ -439,7 +463,7 @@ def create_professional_card(content, title=""):
 st.session_state.gemini_api_key = "AIzaSyDXB8Lj2gamg7SEYmxvZ_uEs7JX3RKZ9yY"
 
 # Tabs principali
-tab1, tab2, tab3, tab4 = st.tabs(["🤖 AI Overview Extractor", "💬 Content Gap Analyzer", "📁 File Manager", "📈 Dashboard Analytics"])
+tab1, tab2, tab3 = st.tabs(["🤖 AI Overview Extractor", "💬 Content Gap Analyzer", "📁 File Manager"])
 
 with tab1:
     st.markdown("""
@@ -483,7 +507,7 @@ with tab1:
                             'extraction_time': time.strftime('%Y-%m-%d %H:%M:%S')
                         }
                         st.session_state.ai_overview_data = ai_overview_data
-                        st.session_state.extraction_count += 1
+
                         st.success("✅ AI Overview estratto con successo!")
                         st.rerun()
                     else:
@@ -551,6 +575,107 @@ with tab1:
                 <p style="color: var(--text-neon); font-size: 0.9rem; text-align: center; opacity: 0.8;">⏰ Estratto il: {data['timestamp']}</p>
             </div>
             """, unsafe_allow_html=True)
+        
+        # Pulsanti di azione per AI Overview
+        st.markdown("""
+        <div class="cyber-card">
+            <h4 style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-family: 'Orbitron', monospace; margin-bottom: 1rem;">🚀 AZIONI DISPONIBILI</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            # Esporta come JSON
+            if st.button("📥 ESPORTA JSON", use_container_width=True, key="export_json"):
+                export_data = {
+                    'query': data.get('query', ''),
+                    'ai_overview': data.get('ai_overview', ''),
+                    'sources': data.get('sources', []),
+                    'extraction_time': data.get('extraction_time', ''),
+                    'found': data.get('found', True),
+                    'export_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                json_str = json.dumps(export_data, indent=2, ensure_ascii=False)
+                st.download_button(
+                    label="💾 Scarica JSON",
+                    data=json_str,
+                    file_name=f"ai_overview_{data.get('query', 'query').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+        
+        with col2:
+            # Esporta come TXT
+            if st.button("📄 ESPORTA TXT", use_container_width=True, key="export_txt"):
+                txt_content = f"""AI OVERVIEW ESTRATTO
+{'='*50}
+
+Query: {data.get('query', 'N/A')}
+Data Estrazione: {data.get('extraction_time', 'N/A')}
+
+CONTENUTO AI OVERVIEW:
+{'-'*30}
+{data.get('ai_overview', 'N/A')}
+
+"""
+                
+                if 'sources' in data and data['sources']:
+                    txt_content += "FONTI:\n" + "-"*10 + "\n"
+                    for i, source in enumerate(data['sources'], 1):
+                        txt_content += f"{i}. {source.get('title', 'N/A')}\n   URL: {source.get('url', 'N/A')}\n\n"
+                
+                txt_content += f"\nEsportato il: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                
+                st.download_button(
+                    label="💾 Scarica TXT",
+                    data=txt_content,
+                    file_name=f"ai_overview_{data.get('query', 'query').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+        
+        with col3:
+            # Invia al Content Gap Analyzer
+            if st.button("🎯 INVIA AL CONTENT GAP ANALYZER", use_container_width=True, key="send_to_analyzer"):
+                # Prepara i dati per il Content Gap Analyzer
+                if st.session_state.semantic_analyzer is None:
+                    st.session_state.semantic_analyzer = SemanticAnalyzer(st.session_state.gemini_api_key)
+                
+                # Crea un messaggio di benvenuto personalizzato
+                ai_content = data.get('ai_overview', '')
+                query_text = data.get('query', '')
+                
+                welcome_message = f"""🎯 **AI Overview caricato automaticamente!**
+
+**Query analizzata:** {query_text}
+**Contenuto:** {len(ai_content.split())} parole
+**Estratto il:** {data.get('extraction_time', 'N/A')}
+
+Sono pronto ad analizzare questo AI Overview per identificare gap di contenuto e opportunità di miglioramento. Cosa vorresti sapere?
+
+💡 **Suggerimenti di analisi:**
+- Analizza i punti chiave mancanti nel mio contenuto
+- Identifica opportunità di approfondimento
+- Suggerisci una strategia di content gap
+- Confronta con i miei contenuti esistenti"""
+                
+                # Pulisci la chat history e aggiungi il messaggio di benvenuto
+                st.session_state.chat_history = [{
+                    'role': 'assistant', 
+                    'content': welcome_message
+                }]
+                
+                # Salva i dati AI Overview per l'analisi
+                st.session_state.ai_overview_data = data
+                
+                st.success("✅ AI Overview inviato al Content Gap Analyzer!")
+                st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
+                
+                # Auto-switch al tab Content Gap Analyzer dopo 2 secondi
+                time.sleep(1)
+                st.rerun()
 
 with tab2:
     st.markdown("""
@@ -571,10 +696,10 @@ with tab2:
         # Chat interface pulita
         st.markdown("""
         <div style="text-align: center; margin: 1rem 0;">
-            <h2 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin: 0;">💭 Content Gap Analyzer</h2>
         </div>
         """, unsafe_allow_html=True)
         
+
         # Caricamento JSON semplificato
         st.subheader("📁 Carica AI Overview JSON")
         uploaded_file = st.file_uploader(
@@ -606,7 +731,7 @@ with tab2:
                 if message['role'] == 'user':
                     st.markdown(f"**👤 Tu:** {message['content']}")
                 else:
-                    st.markdown(f"**🤖 AI:** {message['content']}")
+                    st.markdown(f"**🤖 Stratego AI:** {message['content']}")
                 st.markdown("")
             st.markdown("---")
         
@@ -676,84 +801,159 @@ with tab2:
                 st.rerun()
 
 with tab3:
-    st.header("📁 Gestione File")
-    st.write("Gestisci i tuoi file JSON: carica AI Overview salvati ed esporta i risultati delle analisi.")
-    
-    st.subheader("📤 Carica AI Overview")
-    
-    uploaded_file = st.file_uploader(
-        "Carica un file JSON con AI Overview salvato",
-        type=['json'],
-        help="Carica un file JSON precedentemente esportato contenente dati di AI Overview"
-    )
-    
-    if uploaded_file is not None:
-        try:
-            # Leggi il file JSON
-            file_content = json.loads(uploaded_file.read())
-            
-            # Verifica che sia un file AI Overview valido
-            if 'ai_overview' in file_content or 'full_content' in file_content:
-                st.session_state.ai_overview_data = file_content
-                st.success("✅ AI Overview caricato con successo!")
-                
-                # Mostra anteprima
-                content = file_content.get('ai_overview', file_content.get('full_content', ''))
-                preview = content[:300] + "..." if len(content) > 300 else content
-                st.markdown(f"""
-                <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 15px; padding: 1rem; margin: 1rem 0;">
-                    <h4 style="color: var(--neon-blue);">📋 Anteprima Contenuto:</h4>
-                    <p style="color: var(--text-neon);">{preview}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.error("❌ File JSON non valido. Deve contenere dati di AI Overview.")
-        except json.JSONDecodeError:
-            st.error("❌ Errore nel leggere il file JSON. Verifica che sia un file JSON valido.")
-        except Exception as e:
-            st.error(f"❌ Errore nel caricare il file: {str(e)}")
-    
-    # Sezione Download
     st.markdown("""
     <div class="cyber-card">
-        <h3 style="color: var(--neon-purple); font-family: 'Orbitron', monospace;">📥 ESPORTA RISULTATI</h3>
+        <h2 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">🏪 MAGAZZINO FILE ESTRATTI</h2>
+        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Carica i tuoi file AI Overview estratti e inviali direttamente al Content Gap Analyzer per l'analisi.</p>
     </div>
     """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Export AI Overview
-        if st.session_state.ai_overview_data:
-            ai_json = json.dumps(st.session_state.ai_overview_data, indent=2, ensure_ascii=False)
-            st.download_button(
-                label="📄 Scarica AI Overview JSON",
-                data=ai_json,
-                file_name=f"ai_overview_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
-                help="Scarica l'AI Overview attualmente caricato in formato JSON"
-            )
-        else:
-            st.info("📋 Nessun AI Overview disponibile per l'export")
-    
-    with col2:
-        # Export Content Gap Analysis
-        if st.session_state.content_gap_data:
-            gap_json = json.dumps(st.session_state.content_gap_data, indent=2, ensure_ascii=False)
-            st.download_button(
-                label="📊 Scarica Analisi Gap JSON",
-                data=gap_json,
-                file_name=f"content_gap_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
-                help="Scarica l'ultima analisi Content Gap in formato JSON"
-            )
-        else:
-            st.info("📊 Nessuna analisi Gap disponibile per l'export")
-    
-    # Sezione file locali
+    # Sezione caricamento file
     st.markdown("""
     <div class="cyber-card">
-        <h3 style="color: var(--neon-pink); font-family: 'Orbitron', monospace;">💾 FILE LOCALI DISPONIBILI</h3>
+        <h3 style="color: var(--neon-purple); font-family: 'Orbitron', monospace;">📤 CARICA AI OVERVIEW</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    uploaded_file = st.file_uploader(
+        "Carica un file JSON con AI Overview estratto",
+        type=['json'],
+        help="Carica un file JSON contenente dati di AI Overview per l'analisi",
+        key="ai_overview_uploader"
+    )
+    
+    # Controlla se stiamo eliminando un file per evitare conflitti
+    is_deleting = any(st.session_state.get(f"to_delete_{key.split('_')[-1]}", False) for key in st.session_state.keys() if key.startswith("to_delete_"))
+    
+    if uploaded_file is not None and not is_deleting:
+        # Controlla se questo file è già stato processato in questa sessione
+        file_key = f"processed_{uploaded_file.name}_{uploaded_file.size}"
+        if not st.session_state.get(file_key, False):
+            try:
+                # Leggi il file JSON
+                file_content = json.loads(uploaded_file.read())
+                
+                # Verifica che sia un file AI Overview valido
+                if 'ai_overview' in file_content or 'full_content' in file_content:
+                    # Controlla se il file è già stato caricato per evitare duplicati
+                    file_exists = False
+                    for existing_id, existing_data in st.session_state.uploaded_files.items():
+                        if existing_data['name'] == uploaded_file.name:
+                            file_exists = True
+                            break
+                    
+                    if not file_exists:
+                        # Salva il file nella sessione permanente con ID univoco
+                        import time
+                        file_id = f"uploaded_{uploaded_file.name}_{int(time.time() * 1000)}"
+                        st.session_state.uploaded_files[file_id] = {
+                            'name': uploaded_file.name,
+                            'content': file_content,
+                            'upload_time': datetime.now().strftime('%d/%m/%Y %H:%M')
+                        }
+                        
+                        st.session_state.ai_overview_data = file_content
+                        # Marca il file come processato
+                        st.session_state[file_key] = True
+                        st.success(f"✅ {uploaded_file.name} caricato nel magazzino!")
+                    else:
+                        st.warning(f"⚠️ {uploaded_file.name} è già presente nel magazzino!")
+                        
+                else:
+                    st.error("❌ File JSON non valido. Deve contenere dati di AI Overview.")
+            except json.JSONDecodeError:
+                st.error("❌ Errore nel leggere il file JSON. Verifica che sia un file JSON valido.")
+            except Exception as e:
+                st.error(f"❌ Errore nel caricare il file: {str(e)}")
+    
+    # Mostra i file caricati salvati nella sessione
+    if st.session_state.uploaded_files:
+        st.markdown("""
+        <div class="cyber-card">
+            <h3 style="color: var(--neon-blue); font-family: 'Orbitron', monospace;">📋 FILE CARICATI</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        for file_id, file_data in st.session_state.uploaded_files.items():
+            col1, col2, col3 = st.columns([2, 1, 1])
+            
+            with col1:
+                content = file_data['content'].get('ai_overview', file_data['content'].get('full_content', ''))
+                word_count = len(content.split()) if content else 0
+                query = file_data['content'].get('query', 'N/A')
+                
+                st.markdown(f"""
+                <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                    <p style="color: var(--neon-blue); margin: 0; font-weight: bold;">📄 {file_data['name']}</p>
+                    <p style="color: var(--text-neon); margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
+                    <p style="color: var(--text-neon); margin: 0; font-size: 0.8rem;">Parole: {word_count} | Caricato: {file_data['upload_time']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                if st.button("🚀 Usa", key=f"use_uploaded_file_{file_id}", help=f"Carica {file_data['name']} e invia al Content Gap Analyzer", use_container_width=True):
+                    # Salva i dati immediatamente
+                    st.session_state.ai_overview_data = file_data['content']
+                    
+                    # Prepara messaggio per Content Gap Analyzer
+                    content = file_data['content'].get('ai_overview', file_data['content'].get('full_content', ''))
+                    word_count = len(content.split())
+                    
+                    welcome_message = f"""
+🎯 **AI Overview caricato dal magazzino!**
+
+**File:** {file_data['name']}
+**Query:** {file_data['content'].get('query', 'N/A')}
+**Contenuto:** {word_count} parole
+**Caricato il:** {file_data['upload_time']}
+
+💡 **Pronto per l'analisi!** Inserisci l'URL di un articolo da confrontare o fai una domanda specifica.
+                    """
+                    
+                    # Inizializza chat history se non esiste
+                    if 'chat_history' not in st.session_state:
+                        st.session_state.chat_history = []
+                    
+                    # Aggiungi il messaggio
+                    st.session_state.chat_history.append({
+                        'role': 'assistant',
+                        'content': welcome_message
+                    })
+                    
+                    # Mostra conferma con timestamp
+                    import datetime
+                    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+                    st.success(f"✅ {file_data['name']} caricato e inviato al Content Gap Analyzer! ({timestamp})")
+                    st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
+                    st.rerun()
+            
+            with col3:
+                # Usa callback con session state per gestire l'eliminazione
+                delete_key = f"delete_file_{file_id}"
+                if st.button("🗑️", key=delete_key, help=f"Rimuovi {file_data['name']} dal magazzino", use_container_width=True):
+                    # Imposta flag di eliminazione nel session state
+                    st.session_state[f"to_delete_{file_id}"] = True
+                    st.rerun()
+                
+                # Controlla se c'è un file da eliminare
+                if st.session_state.get(f"to_delete_{file_id}", False):
+                    if file_id in st.session_state.uploaded_files:
+                        file_name = st.session_state.uploaded_files[file_id]['name']
+                        del st.session_state.uploaded_files[file_id]
+                        # Rimuovi il flag di eliminazione
+                        del st.session_state[f"to_delete_{file_id}"]
+                        st.success(f"✅ {file_name} rimosso dal magazzino!")
+                        st.rerun()
+                    else:
+                        # Rimuovi il flag anche se il file non esiste
+                        if f"to_delete_{file_id}" in st.session_state:
+                            del st.session_state[f"to_delete_{file_id}"]
+                        st.error(f"❌ Errore: file non trovato nel magazzino!")
+    
+    # Sezione file locali nel magazzino
+    st.markdown("""
+    <div class="cyber-card">
+        <h3 style="color: var(--neon-pink); font-family: 'Orbitron', monospace;">💾 MAGAZZINO LOCALE</h3>
     </div>
     """, unsafe_allow_html=True)
     
@@ -762,124 +962,90 @@ with tab3:
     
     # Cerca file JSON nella directory corrente
     json_files = glob.glob("*.json")
+    ai_overview_files = []
     
-    if json_files:
-        selected_file = st.selectbox(
-            "Seleziona un file JSON locale da caricare:",
-            options=["Seleziona..."] + json_files
-        )
-        
-        if selected_file != "Seleziona..." and st.button(f"📂 Carica {selected_file}"):
-            try:
-                with open(selected_file, 'r', encoding='utf-8') as f:
-                    file_content = json.load(f)
-                
-                # Determina il tipo di file
-                if 'ai_overview' in file_content or 'full_content' in file_content:
-                    st.session_state.ai_overview_data = file_content
-                    st.success(f"✅ AI Overview caricato da {selected_file}!")
-                elif 'gap_analysis' in file_content:
-                    st.session_state.content_gap_data = file_content
-                    st.success(f"✅ Analisi Gap caricata da {selected_file}!")
-                else:
-                    st.warning(f"⚠️ Tipo di file non riconosciuto: {selected_file}")
+    # Filtra solo i file AI Overview
+    for file in json_files:
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+                if 'ai_overview' in content or 'full_content' in content:
+                    ai_overview_files.append(file)
+        except:
+            continue
+    
+    if ai_overview_files:
+        for file in ai_overview_files:
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                try:
+                    with open(file, 'r', encoding='utf-8') as f:
+                        file_content = json.load(f)
                     
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Errore nel caricare {selected_file}: {str(e)}")
-    else:
-        st.info("📁 Nessun file JSON trovato nella directory corrente")
+                    query = file_content.get('query', 'Query non disponibile')
+                    content = file_content.get('ai_overview', file_content.get('full_content', ''))
+                    word_count = len(content.split()) if content else 0
+                    
+                    st.markdown(f"""
+                    <div style="background: rgba(179, 71, 217, 0.1); border: 1px solid var(--neon-purple); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
+                        <p style="color: var(--neon-purple); margin: 0; font-weight: bold;">📄 {file}</p>
+                        <p style="color: var(--text-neon); margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
+                        <p style="color: var(--text-neon); margin: 0; font-size: 0.8rem;">Parole: {word_count}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except:
+                    st.markdown(f"📄 {file} (errore lettura)")
+            
+            with col2:
+                # Pulsante riutilizzabile per invio multiplo
+                button_key = f"use_local_file_{file}_{hash(file)}"
+                if st.button("🚀 Usa", key=button_key, help=f"Carica {file} e invia al Content Gap Analyzer", use_container_width=True):
+                    try:
+                        with open(file, 'r', encoding='utf-8') as f:
+                            file_content = json.load(f)
+                        
+                        # Salva i dati immediatamente
+                        st.session_state.ai_overview_data = file_content
+                        
+                        # Prepara messaggio per Content Gap Analyzer
+                        content = file_content.get('ai_overview', file_content.get('full_content', ''))
+                        word_count = len(content.split())
+                        
+                        welcome_message = f"""
+🎯 **AI Overview caricato dal magazzino locale!**
 
-with tab4:
-    st.markdown("""
-    <div class="cyber-card">
-        <h2 style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">📈 DASHBOARD ANALYTICS</h2>
-        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Visualizza statistiche avanzate e metriche di performance del sistema di analisi.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Metriche di sessione
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni Totali"), unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi Totali"), unsafe_allow_html=True)
-    
-    with col3:
-        success_rate = "100%" if st.session_state.extraction_count > 0 else "0%"
-        st.markdown(create_metric_card(success_rate, "Success Rate"), unsafe_allow_html=True)
-    
-    # Grafici di performance
-    if st.session_state.extraction_count > 0 or st.session_state.analysis_count > 0:
-        st.markdown("""
-        <div class="cyber-card">
-            <h3 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">📊 PERFORMANCE ANALYTICS</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Grafico a torta delle attività
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=['Estrazioni AI Overview', 'Analisi Content Gap'],
-            values=[st.session_state.extraction_count, st.session_state.analysis_count],
-            hole=0.4,
-            marker_colors=['#00d4ff', '#b347d9']
-        )])
-        
-        fig_pie.update_layout(
-            title={
-                'text': 'Distribuzione Attività',
-                'x': 0.5,
-                'font': {'color': '#ffffff', 'size': 20, 'family': 'Orbitron'}
-            },
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font={'color': '#ffffff', 'family': 'Rajdhani'},
-            showlegend=True,
-            legend={'font': {'color': '#ffffff'}}
-        )
-        
-        st.plotly_chart(fig_pie, use_container_width=True)
-        
-        # Benchmark di performance
-        st.markdown("""
-        <div class="cyber-card">
-            <h3 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">⚡ BENCHMARK PERFORMANCE</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(create_metric_card("12.3s", "Estrazione Media", "benchmark"), unsafe_allow_html=True)
-        with col2:
-            st.markdown(create_metric_card("3.7s", "Analisi Media", "benchmark"), unsafe_allow_html=True)
-        with col3:
-            st.markdown(create_metric_card("94%", "Successo Rate", "benchmark"), unsafe_allow_html=True)
-    
-    else:
-        st.markdown("""
-        <div class="cyber-card">
-            <p style="color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); font-size: 1.2rem; text-align: center;">📊 Nessun dato disponibile. Inizia estraendo un AI Overview!</p>
-        </div>
-        """, unsafe_allow_html=True)
+**File:** {file}
+**Query:** {file_content.get('query', 'N/A')}
+**Contenuto:** {word_count} parole
+**Estratto il:** {file_content.get('extraction_time', 'N/A')}
 
-# Footer con statistiche
+💡 **Pronto per l'analisi!** Inserisci l'URL di un articolo da confrontare o fai una domanda specifica.
+                        """
+                        
+                        # Inizializza chat history se non esiste
+                        if 'chat_history' not in st.session_state:
+                            st.session_state.chat_history = []
+                        
+                        # Aggiungi il messaggio (sempre, anche se già presente)
+                        st.session_state.chat_history.append({
+                            'role': 'assistant',
+                            'content': welcome_message
+                        })
+                        
+                        # Mostra conferma con timestamp per distinguere invii multipli
+                        import datetime
+                        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+                        st.success(f"✅ {file} caricato e inviato al Content Gap Analyzer! ({timestamp})")
+                        st.info("🔄 Vai al tab 'Content Gap Analyzer' per iniziare l'analisi.")
+                        st.rerun()
+                        
+                    except Exception as e:
+                        st.error(f"❌ Errore nel caricare {file}: {str(e)}")
+
+# Footer
 st.markdown("""
-<div class="cyber-card" style="margin-top: 3rem;">
-    <h3 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; text-align: center; margin-bottom: 1.5rem;">📊 STATISTICHE SESSIONE</h3>
-</div>
-""", unsafe_allow_html=True)
-
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown(create_metric_card(st.session_state.extraction_count, "Estrazioni"), unsafe_allow_html=True)
-with col2:
-    st.markdown(create_metric_card(st.session_state.analysis_count, "Analisi"), unsafe_allow_html=True)
-
-st.markdown("""
-<div class="cyber-card" style="margin-top: 2rem; text-align: center;">
-    <p style="color: var(--text-neon); font-size: 1rem; margin-bottom: 0.5rem;">🚀 <strong>Ai Analyzer</strong> - Powered by Nicolas Micolani</p>
-    <p style="color: var(--text-neon); font-size: 0.9rem; opacity: 0.8;">Ai Overview Scraper & Content Gap Analyz</p>
+<div style="text-align: center; padding: 1rem 1rem 0 1rem; margin-top: 3rem; border-top: 1px solid var(--border-light); color: var(--text-muted);">
+    <p style="margin: 0; font-size: 1rem;">© 2025 Stratego Swat | <span class="cyber-powered"><strong>Stratego Swat AI Analyzer V1.0</strong></span> | Sviluppata da <span class="cyber-powered"><strong>Nicolas Micolani</strong></span></p>
 </div>
 """, unsafe_allow_html=True)
