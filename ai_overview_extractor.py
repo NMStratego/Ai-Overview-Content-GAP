@@ -62,10 +62,23 @@ class AIOverviewExtractor:
             ]
             
             # Avvia browser Chromium
-            self.browser = self.playwright.chromium.launch(
-                headless=self.headless,
-                args=browser_args
-            )
+            try:
+                self.browser = self.playwright.chromium.launch(
+                    headless=self.headless,
+                    args=browser_args
+                )
+            except Exception as browser_error:
+                if "Executable doesn't exist" in str(browser_error):
+                    raise Exception(
+                        "❌ ERRORE STREAMLIT CLOUD: I browser Playwright non sono installati.\n\n"
+                        "🔧 SOLUZIONI ALTERNATIVE:\n"
+                        "1. 🚀 Deploy su Heroku, Railway, o Render (supportano Playwright)\n"
+                        "2. 🐳 Usa Docker con immagine playwright\n"
+                        "3. ☁️ Usa servizi cloud come ScrapingBee o Browserless\n\n"
+                        "📝 Streamlit Cloud non supporta l'installazione di browser per motivi di sicurezza."
+                    )
+                else:
+                    raise browser_error
             
             # Crea contesto con impostazioni anti-rilevamento
             context = self.browser.new_context(

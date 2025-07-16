@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  stratego-swat-ai:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ENABLE_CORS=false
+      - STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION=false
+    volumes:
+      - ./data:/app/data  # Per salvare dati persistenti
+    restart: unless-stopped
+    container_name: stratego-swat-ai-analyzer
