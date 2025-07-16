@@ -51,14 +51,36 @@ git push heroku main
 3. Railway rileverà automaticamente il Dockerfile
 4. Deploy automatico!
 
-### 4. 🎯 Render
+### 4. 🎯 Render (Raccomandato per semplicità)
 
-1. Vai su [Render.com](https://render.com)
-2. Crea nuovo "Web Service"
-3. Connetti repository GitHub
-4. Usa queste impostazioni:
-   - **Build Command**: `pip install -r requirements.txt && playwright install chromium`
-   - **Start Command**: `streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0`
+#### Opzione A: Deploy automatico con render.yaml (Raccomandato)
+
+1. **Crea account su [Render](https://render.com)**
+2. **Connetti il repository GitHub**
+3. **Il file `render.yaml` configurerà automaticamente tutto**
+4. **Render rileverà automaticamente la configurazione Docker**
+
+#### Opzione B: Configurazione manuale
+
+1. **Crea nuovo Web Service**
+2. **Seleziona "Docker" come ambiente**
+3. **Configura il servizio:**
+   ```
+   Build Command: docker build -t stratego-swat-ai .
+   Start Command: docker run -p 8501:8501 stratego-swat-ai
+   ```
+4. **Variabili d'ambiente:**
+   ```
+   STREAMLIT_SERVER_HEADLESS=true
+   STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+   PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+   ```
+
+#### Troubleshooting Render
+
+- **Se il build fallisce:** Controlla i log di build per errori Playwright
+- **Se l'app non si avvia:** Verifica che la porta 8501 sia esposta
+- **Se Playwright non funziona:** Assicurati di usare il Dockerfile fornito
 
 ### 5. ☁️ Servizi Cloud Alternativi
 

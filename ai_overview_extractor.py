@@ -34,7 +34,11 @@ class AIOverviewExtractor:
         """Configura Playwright con le migliori opzioni per gestire popup Google (2025)"""
         try:
             print("🚀 Inizializzando Playwright (2025)...")
+            print(f"📍 Sistema operativo: {os.name}")
+            print(f"📍 Directory corrente: {os.getcwd()}")
+            
             self.playwright = sync_playwright().start()
+            print("✅ Playwright avviato con successo")
             
             # Opzioni browser ottimizzate per gestire popup di consenso Google
             browser_args = [
@@ -63,24 +67,46 @@ class AIOverviewExtractor:
             
             # Avvia browser Chromium
             try:
+                print("🌐 Avviando browser Chromium...")
                 self.browser = self.playwright.chromium.launch(
                     headless=self.headless,
                     args=browser_args
                 )
+                print("✅ Browser Chromium avviato con successo")
             except Exception as browser_error:
-                if "Executable doesn't exist" in str(browser_error):
-                    raise Exception(
-                        "❌ ERRORE STREAMLIT CLOUD: I browser Playwright non sono installati.\n\n"
-                        "🔧 SOLUZIONI ALTERNATIVE:\n"
-                        "1. 🚀 Deploy su Heroku, Railway, o Render (supportano Playwright)\n"
-                        "2. 🐳 Usa Docker con immagine playwright\n"
-                        "3. ☁️ Usa servizi cloud come ScrapingBee o Browserless\n\n"
-                        "📝 Streamlit Cloud non supporta l'installazione di browser per motivi di sicurezza."
-                    )
+                error_msg = str(browser_error)
+                print(f"❌ Errore avvio browser: {error_msg}")
+                
+                if "Executable doesn't exist" in error_msg:
+                    # Verifica se siamo su Render o altra piattaforma
+                    platform_info = os.environ.get('RENDER', 'unknown')
+                    if platform_info or 'render' in os.environ.get('HOSTNAME', '').lower():
+                        raise Exception(
+                            "❌ ERRORE RENDER: Browser Playwright non trovato.\n\n"
+                            "🔧 SOLUZIONI PER RENDER:\n"
+                            "1. 🐳 Assicurati di usare il Dockerfile fornito\n"
+                            "2. 🔄 Ricostruisci il servizio su Render\n"
+                            "3. 📋 Verifica che playwright install sia eseguito nel build\n"
+                            "4. 🔍 Controlla i log di build per errori\n\n"
+                            f"📊 Info ambiente: {platform_info}\n"
+                            f"📁 Directory: {os.getcwd()}\n"
+                            f"🖥️ Sistema: {os.name}"
+                        )
+                    else:
+                        raise Exception(
+                            "❌ ERRORE: Browser Playwright non trovato.\n\n"
+                            "🔧 SOLUZIONI:\n"
+                            "1. 🚀 Deploy su Heroku, Railway, o Render con Docker\n"
+                            "2. 🐳 Usa Docker con immagine playwright\n"
+                            "3. ☁️ Usa servizi cloud come ScrapingBee o Browserless\n"
+                            "4. 💻 Esegui 'playwright install chromium' localmente\n\n"
+                            "📝 Alcune piattaforme non supportano browser per motivi di sicurezza."
+                        )
                 else:
-                    raise browser_error
+                    raise Exception(f"❌ Errore browser: {error_msg}")
             
             # Crea contesto con impostazioni anti-rilevamento
+            print("🔧 Creando contesto browser...")
             context = self.browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -91,9 +117,12 @@ class AIOverviewExtractor:
                     'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
                 }
             )
+            print("✅ Contesto browser creato")
             
             # Crea pagina
+            print("📄 Creando nuova pagina...")
             self.page = context.new_page()
+            print("✅ Pagina creata con successo")
             
             # Script anti-rilevamento
             self.page.add_init_script("""
