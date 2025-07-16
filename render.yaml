@@ -12,37 +12,39 @@ services:
     healthCheckPath: /
     envVars:
       - key: PLAYWRIGHT_BROWSERS_PATH
-        value: /ms-playwright
-      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
-        value: "1"
+        value: /opt/render/project/.playwright
       - key: NLTK_DATA
-        value: /app/nltk_data
+        value: /opt/render/project/nltk_data
       - key: PYTHONPATH
-        value: /app
-      - key: STREAMLIT_SERVER_PORT
-        value: "8501"
-      - key: STREAMLIT_SERVER_ADDRESS
-        value: "0.0.0.0"
+        value: /opt/render/project/src
       - key: STREAMLIT_SERVER_HEADLESS
-        value: "true"
-      - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
-        value: "false"
-      # Ottimizzazioni per velocità
+        value: true
+      - key: STREAMLIT_SERVER_PORT
+        value: 10000
+      - key: STREAMLIT_SERVER_ADDRESS
+        value: 0.0.0.0
+      # Ottimizzazioni performance
       - key: STREAMLIT_SERVER_ENABLE_CORS
-        value: "false"
+        value: false
       - key: STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION
-        value: "false"
+        value: false
       - key: STREAMLIT_LOGGER_LEVEL
-        value: "WARNING"
+        value: WARNING
       - key: PYTHONDONTWRITEBYTECODE
-        value: "1"
+        value: 1
       - key: PYTHONUNBUFFERED
-        value: "1"
-      # Cache per dipendenze
+        value: 1
       - key: PIP_CACHE_DIR
-        value: "/tmp/pip-cache"
-      - key: DEPS_CACHE_ENABLED
-        value: "true"
+        value: /tmp/pip-cache
+      - key: DEPENDENCY_CACHE_ENABLED
+        value: true
+      # Fix NLTK per Render
+      - key: NLTK_DOWNLOAD_DIR
+        value: /tmp/nltk_data
+      - key: NLTK_TOKENIZE_PRESERVE_LINE
+        value: false
+      - key: NLTK_PUNKT_TAB_FALLBACK
+        value: true
     buildCommand: |
       echo "🚀 Iniziando build per Render..."
       echo "📦 Installando dipendenze Python..."

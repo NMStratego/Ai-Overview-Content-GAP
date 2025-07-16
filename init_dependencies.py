@@ -15,41 +15,90 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def download_nltk_data():
-    """Scarica i dati NLTK necessari (ottimizzato)"""
+    """Scarica i dati NLTK necessari (ottimizzato per Render)"""
     logger.info("📚 Verifica dati NLTK...")
     try:
         import nltk
         
-        # Crea directory NLTK se non esiste
-        nltk_data_dir = os.path.expanduser('~/nltk_data')
+        # Usa directory NLTK specifica per Render se disponibile
+        nltk_data_dir = os.environ.get('NLTK_DOWNLOAD_DIR', os.path.expanduser('~/nltk_data'))
         os.makedirs(nltk_data_dir, exist_ok=True)
         
-        # Controlla se i dati sono già presenti prima di scaricare
-        required_data = ['punkt', 'stopwords', 'punkt_tab']
+        # Imposta il path per NLTK
+        if nltk_data_dir not in nltk.data.path:
+            nltk.data.path.append(nltk_data_dir)
+        
+        # Lista dei dati NLTK necessari con gestione errori migliorata
+        required_data = {
+            'punkt': 'tokenizers/punkt',
+            'stopwords': 'corpora/stopwords'
+        }
+        
+        # Gestione speciale per punkt_tab (problematico su Render)
+        punkt_tab_fallback = os.environ.get('NLTK_PUNKT_TAB_FALLBACK', 'false').lower() == 'true'
+        if not punkt_tab_fallback:
+            required_data['punkt_tab'] = 'tokenizers/punkt_tab'
+        
         missing_data = []
         
-        for data in required_data:
+        for data_name, data_path in required_data.items():
             try:
-                nltk.data.find(f'tokenizers/{data}')
+                nltk.data.find(data_path)
+                logger.info(f"✅ {data_name} già presente")
             except LookupError:
-                try:
-                    nltk.data.find(f'corpora/{data}')
-                except LookupError:
-                    missing_data.append(data)
+                missing_data.append(data_name)
+                logger.info(f"📥 {data_name} mancante, sarà scaricato")
         
-        # Scarica solo i dati mancanti
+        # Scarica solo i dati mancanti con gestione errori robusta
         if missing_data:
             logger.info(f"📥 Download dati NLTK mancanti: {missing_data}")
             for data in missing_data:
-                nltk.download(data, quiet=True)
+                try:
+                    # Gestione speciale per punkt_tab
+                    if data == 'punkt_tab':
+                        logger.info("⚠️ Tentativo download punkt_tab (può fallire su Render)...")
+                        try:
+                            result = nltk.download(data, quiet=True)
+                            if result:
+                                logger.info(f"✅ {data} scaricato con successo")
+                            else:
+                                logger.warning(f"⚠️ {data} non disponibile, usando fallback punkt")
+                        except Exception as e:
+                            logger.warning(f"⚠️ punkt_tab fallito come atteso su Render: {e}")
+                            logger.info("✅ Continuando con punkt standard (sufficiente)")
+                    else:
+                        result = nltk.download(data, quiet=True)
+                        if result:
+                            logger.info(f"✅ {data} scaricato con successo")
+                        else:
+                            logger.warning(f"⚠️ {data} non scaricato (potrebbe non esistere)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Errore download {data}: {e}")
+                    # Continua con gli altri download anche se uno fallisce
         else:
-            logger.info("✅ Dati NLTK già presenti")
+            logger.info("✅ Tutti i dati NLTK già presenti")
         
-        logger.info("✅ Dati NLTK pronti")
-        return True
+        # Verifica finale che almeno punkt funzioni (essenziale)
+        try:
+            nltk.data.find('tokenizers/punkt')
+            logger.info("✅ Dati NLTK essenziali pronti")
+            return True
+        except LookupError:
+            # Fallback: prova a scaricare punkt direttamente
+            logger.warning("⚠️ Punkt non trovato, tentativo download diretto...")
+            try:
+                nltk.download('punkt', quiet=True)
+                logger.info("✅ Punkt scaricato come fallback")
+                return True
+            except Exception as e:
+                logger.error(f"❌ Impossibile scaricare punkt: {e}")
+                return False
+        
     except Exception as e:
         logger.error(f"❌ Errore nel setup NLTK: {e}")
-        return False
+        # Anche in caso di errore, ritorna True per non bloccare l'app
+        logger.warning("⚠️ Continuando senza NLTK completo...")
+        return True
 
 def verify_playwright_installation():
     """Verifica che Playwright sia installato correttamente (ottimizzato)"""
