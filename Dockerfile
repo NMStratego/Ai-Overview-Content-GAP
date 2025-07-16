@@ -35,7 +35,7 @@ RUN playwright install-deps chromium
 COPY init_dependencies.py .
 
 # Verifica che Playwright funzioni correttamente e inizializza tutte le dipendenze
-RUN python3 -c "from playwright.sync_api import sync_playwright; p = sync_playwright(); browser = p.chromium.launch(headless=True); page = browser.new_page(); page.goto('data:text/html,<h1>Test</h1>'); print('✅ Playwright verification successful'); page.close(); browser.close(); p.stop()" || (echo '❌ Playwright verification failed' && exit 1)
+RUN python3 -c "from playwright.sync_api import sync_playwright; exec('with sync_playwright() as p: browser = p.chromium.launch(headless=True); page = browser.new_page(); page.goto(\"data:text/html,<h1>Test</h1>\"); print(\"✅ Playwright verification successful\"); page.close(); browser.close()')" || (echo '❌ Playwright verification failed' && exit 1)
 
 # Inizializza tutte le dipendenze (NLTK, ecc.)
 RUN python3 init_dependencies.py
