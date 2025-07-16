@@ -4,13 +4,26 @@ Ai Analyzer - Interfaccia ultra-moderna per analisi AI Overview e Content Gap
 Powered by Nicolas Micolani
 """
 
-# Inizializzazione dipendenze per Render
+import os
+from datetime import datetime
+
+# Inizializzazione dipendenze per Render (ottimizzata)
 try:
-    from init_dependencies import initialize_all_dependencies
-    initialize_all_dependencies()
+    # Controlla se le dipendenze sono già state inizializzate
+    if not os.path.exists('/tmp/.dependencies_initialized'):
+        from init_dependencies import initialize_all_dependencies
+        if initialize_all_dependencies():
+            # Crea file marker per evitare re-inizializzazioni
+            with open('/tmp/.dependencies_initialized', 'w') as f:
+                f.write(str(datetime.now()))
+            print("✅ Dipendenze inizializzate con successo")
+        else:
+            print("⚠️ Alcune dipendenze potrebbero non essere disponibili")
+    else:
+        print("✅ Dipendenze già inizializzate")
 except ImportError:
     # Se il file non esiste, continua senza inizializzazione
-    pass
+    print("ℹ️ Script di inizializzazione non trovato, continuando...")
 except Exception as e:
     print(f"⚠️ Avviso inizializzazione dipendenze: {e}")
 

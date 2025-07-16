@@ -27,6 +27,22 @@ services:
         value: "true"
       - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
         value: "false"
+      # Ottimizzazioni per velocità
+      - key: STREAMLIT_SERVER_ENABLE_CORS
+        value: "false"
+      - key: STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION
+        value: "false"
+      - key: STREAMLIT_LOGGER_LEVEL
+        value: "WARNING"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Cache per dipendenze
+      - key: PIP_CACHE_DIR
+        value: "/tmp/pip-cache"
+      - key: DEPS_CACHE_ENABLED
+        value: "true"
     buildCommand: |
       echo "🚀 Iniziando build per Render..."
       echo "📦 Installando dipendenze Python..."

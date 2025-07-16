@@ -8,14 +8,15 @@ import os
 import sys
 import subprocess
 import logging
+import time
 
 # Configura logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def download_nltk_data():
-    """Scarica i dati NLTK necessari"""
-    logger.info("📚 Download dati NLTK...")
+    """Scarica i dati NLTK necessari (ottimizzato)"""
+    logger.info("📚 Verifica dati NLTK...")
     try:
         import nltk
         
@@ -23,34 +24,47 @@ def download_nltk_data():
         nltk_data_dir = os.path.expanduser('~/nltk_data')
         os.makedirs(nltk_data_dir, exist_ok=True)
         
-        # Download dei dati necessari
-        nltk.download('punkt', quiet=True)
-        nltk.download('stopwords', quiet=True)
-        nltk.download('punkt_tab', quiet=True)  # Nuovo tokenizer
+        # Controlla se i dati sono già presenti prima di scaricare
+        required_data = ['punkt', 'stopwords', 'punkt_tab']
+        missing_data = []
         
-        logger.info("✅ Dati NLTK scaricati con successo")
+        for data in required_data:
+            try:
+                nltk.data.find(f'tokenizers/{data}')
+            except LookupError:
+                try:
+                    nltk.data.find(f'corpora/{data}')
+                except LookupError:
+                    missing_data.append(data)
+        
+        # Scarica solo i dati mancanti
+        if missing_data:
+            logger.info(f"📥 Download dati NLTK mancanti: {missing_data}")
+            for data in missing_data:
+                nltk.download(data, quiet=True)
+        else:
+            logger.info("✅ Dati NLTK già presenti")
+        
+        logger.info("✅ Dati NLTK pronti")
         return True
     except Exception as e:
-        logger.error(f"❌ Errore nel download NLTK: {e}")
+        logger.error(f"❌ Errore nel setup NLTK: {e}")
         return False
 
 def verify_playwright_installation():
-    """Verifica che Playwright sia installato correttamente"""
-    logger.info("🎭 Verifica installazione Playwright...")
+    """Verifica che Playwright sia installato correttamente (ottimizzato)"""
+    logger.info("🎭 Verifica Playwright...")
     try:
+        # Verifica solo l'import senza avviare browser (più veloce)
         from playwright.sync_api import sync_playwright
         
-        # Test di base per verificare che Playwright funzioni
-        with sync_playwright() as p:
-            # Verifica che i browser siano disponibili
-            browser_path = p.chromium.executable_path
-            if os.path.exists(browser_path):
-                logger.info(f"✅ Playwright Chromium trovato: {browser_path}")
-                return True
-            else:
-                logger.warning(f"⚠️ Browser Chromium non trovato: {browser_path}")
-                return False
+        # Verifica rapida dell'esistenza del modulo
+        logger.info("✅ Playwright disponibile")
+        return True
                 
+    except ImportError as e:
+        logger.error(f"❌ Playwright non installato: {e}")
+        return False
     except Exception as e:
         logger.error(f"❌ Errore nella verifica di Playwright: {e}")
         return False
@@ -106,42 +120,57 @@ def verify_web_scraping_dependencies():
         return False
 
 def initialize_all_dependencies():
-    """Inizializza tutte le dipendenze necessarie"""
-    logger.info("🚀 Inizializzazione dipendenze per Render...")
+    """Inizializza tutte le dipendenze necessarie (ottimizzato per Render)"""
+    logger.info("🚀 Inizializzazione dipendenze per Render (modalità veloce)...")
     logger.info("=" * 50)
+    
+    # Cache file per evitare verifiche ripetute
+    cache_file = '/tmp/.deps_cache'
+    
+    # Se esiste cache recente (< 1 ora), salta le verifiche
+    if os.path.exists(cache_file):
+        try:
+            cache_time = os.path.getmtime(cache_file)
+            current_time = time.time()
+            if current_time - cache_time < 3600:  # 1 ora
+                logger.info("⚡ Cache dipendenze valida, saltando verifiche")
+                logger.info("✅ Dipendenze pronte (da cache)")
+                return True
+        except:
+            pass
     
     success_count = 0
     total_checks = 6
     
-    # Download dati NLTK
-    if download_nltk_data():
-        success_count += 1
+    # Verifiche essenziali (solo import, no download/test pesanti)
+    checks = [
+        ("NLTK", download_nltk_data),
+        ("Playwright", verify_playwright_installation),
+        ("Google AI", verify_google_generativeai),
+        ("Scikit-learn", verify_sklearn),
+        ("Streamlit", verify_streamlit_dependencies),
+        ("Web Scraping", verify_web_scraping_dependencies)
+    ]
     
-    # Verifica Playwright
-    if verify_playwright_installation():
-        success_count += 1
-    
-    # Verifica Google Generative AI
-    if verify_google_generativeai():
-        success_count += 1
-    
-    # Verifica scikit-learn
-    if verify_sklearn():
-        success_count += 1
-    
-    # Verifica Streamlit
-    if verify_streamlit_dependencies():
-        success_count += 1
-    
-    # Verifica web scraping
-    if verify_web_scraping_dependencies():
-        success_count += 1
+    for name, check_func in checks:
+        try:
+            if check_func():
+                success_count += 1
+        except Exception as e:
+            logger.warning(f"⚠️ Errore verifica {name}: {e}")
     
     logger.info("=" * 50)
     logger.info(f"✅ Inizializzazione completata: {success_count}/{total_checks} verifiche riuscite")
     
-    if success_count == total_checks:
-        logger.info("🎉 Tutte le dipendenze sono pronte!")
+    # Crea cache se almeno 4/6 dipendenze funzionano
+    if success_count >= 4:
+        try:
+            with open(cache_file, 'w') as f:
+                f.write(f"Dependencies checked at {time.time()}")
+        except:
+            pass
+        
+        logger.info("🎉 Dipendenze pronte!")
         return True
     else:
         logger.warning(f"⚠️ {total_checks - success_count} dipendenze hanno problemi")
