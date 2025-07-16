@@ -901,7 +901,7 @@ with tab3:
             
             with col1:
                 content = file_data['content'].get('ai_overview', file_data['content'].get('full_content', ''))
-                word_count = len(content.split()) if content else 0
+                word_count = len(content.split()) if content and isinstance(content, str) else 0
                 query = file_data['content'].get('query', 'N/A')
                 
                 st.markdown(f"""
@@ -919,7 +919,7 @@ with tab3:
                     
                     # Prepara messaggio per Content Gap Analyzer
                     content = file_data['content'].get('ai_overview', file_data['content'].get('full_content', ''))
-                    word_count = len(content.split())
+                    word_count = len(content.split()) if isinstance(content, str) else 0
                     
                     welcome_message = f"""
 🎯 **AI Overview caricato dal magazzino!**
@@ -1004,7 +1004,7 @@ with tab3:
                     
                     query = file_content.get('query', 'Query non disponibile')
                     content = file_content.get('ai_overview', file_content.get('full_content', ''))
-                    word_count = len(content.split()) if content else 0
+                    word_count = len(content.split()) if content and isinstance(content, str) else 0
                     
                     st.markdown(f"""
                     <div style="background: rgba(179, 71, 217, 0.1); border: 1px solid var(--neon-purple); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
@@ -1029,7 +1029,7 @@ with tab3:
                         
                         # Prepara messaggio per Content Gap Analyzer
                         content = file_content.get('ai_overview', file_content.get('full_content', ''))
-                        word_count = len(content.split())
+                        word_count = len(content.split()) if isinstance(content, str) else 0
                         
                         welcome_message = f"""
 🎯 **AI Overview caricato dal magazzino locale!**
