@@ -14,7 +14,11 @@ services:
       - key: PLAYWRIGHT_BROWSERS_PATH
         value: /ms-playwright
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
-        value: "0"
+        value: "1"
+      - key: NLTK_DATA
+        value: /app/nltk_data
+      - key: PYTHONPATH
+        value: /app
       - key: STREAMLIT_SERVER_PORT
         value: "8501"
       - key: STREAMLIT_SERVER_ADDRESS

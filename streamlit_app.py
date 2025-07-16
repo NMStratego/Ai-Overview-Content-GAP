@@ -4,6 +4,16 @@ Ai Analyzer - Interfaccia ultra-moderna per analisi AI Overview e Content Gap
 Powered by Nicolas Micolani
 """
 
+# Inizializzazione dipendenze per Render
+try:
+    from init_dependencies import initialize_all_dependencies
+    initialize_all_dependencies()
+except ImportError:
+    # Se il file non esiste, continua senza inizializzazione
+    pass
+except Exception as e:
+    print(f"⚠️ Avviso inizializzazione dipendenze: {e}")
+
 import streamlit as st
 import json
 import time
