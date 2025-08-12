@@ -121,11 +121,19 @@ https://your-app-name.railway.app
 
 ### Errore "$PORT is not a valid integer"
 **Problema**: Streamlit non riesce a leggere la variabile PORT
-**Causa**: Sintassi sbagliata per le variabili d'ambiente
-**Soluzione**:
-- Usare `${PORT}` invece di `$PORT` nel comando di avvio
-- Railway richiede la sintassi con parentesi graffe per le variabili
-- La configurazione corretta è: `--server.port=${PORT}`
+**Causa**: Railway non passa correttamente la variabile PORT
+**Soluzione Semplificata**:
+- Usare una porta fissa: `--server.port=8080`
+- Rimuovere l'health check che non è obbligatorio
+- Railway mapperà automaticamente la porta 8080 all'esterno
+
+### Health Check Non Obbligatorio
+**Domanda**: È obbligatorio l'health check?
+**Risposta**: NO, l'health check non è obbligatorio
+**Vantaggi senza health check**:
+- Deploy più semplice e veloce
+- Meno possibilità di errori
+- Railway può comunque monitorare l'app
 
 ### Playwright Non Funziona
 - **Browser**: Verificati automaticamente nel Dockerfile

@@ -8,13 +8,9 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Configurazione deployment
-startCommand = "streamlit run streamlit_app.py --server.port=${PORT} --server.address=0.0.0.0 --server.headless=true"
+startCommand = "streamlit run streamlit_app.py --server.port=8080 --server.address=0.0.0.0 --server.headless=true"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
-
-# Health check
-healthcheckPath = "/_stcore/health"
-healthcheckTimeout = 300
 
 # Risorse
 [deploy.resources]
