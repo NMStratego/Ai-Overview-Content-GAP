@@ -92,10 +92,26 @@ class AIOverviewExtractor:
         
         # Avvia browser Chromium
         print("🌐 Avviando browser Chromium...")
-        self.browser = self.playwright.chromium.launch(
-            headless=self.headless,
-            args=browser_args
-        )
+        
+        # Configura percorso eseguibile per Railway
+        executable_path = None
+        if os.path.exists('/ms-playwright'):
+            # Railway environment
+            import glob
+            chrome_paths = glob.glob('/ms-playwright/chromium-*/chrome-linux/chrome')
+            if chrome_paths:
+                executable_path = chrome_paths[0]
+                print(f"📍 Usando Chrome da Railway: {executable_path}")
+        
+        launch_options = {
+            'headless': self.headless,
+            'args': browser_args
+        }
+        
+        if executable_path:
+            launch_options['executable_path'] = executable_path
+            
+        self.browser = self.playwright.chromium.launch(**launch_options)
         print("✅ Browser Chromium avviato con successo")
         
         # Crea contesto con impostazioni anti-rilevamento
