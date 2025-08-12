@@ -13,6 +13,43 @@ class SemanticAnalyzer:
     l'accuratezza dell'analisi del content gap
     """
     
+    @staticmethod
+    def _extract_text_from_response(response):
+        """
+        Estrae il testo dalla risposta di Gemini in modo sicuro
+        
+        Args:
+            response: Risposta di Gemini
+            
+        Returns:
+            str: Testo estratto dalla risposta
+        """
+        try:
+            # Prova prima con response.text (metodo semplice)
+            if hasattr(response, 'text') and response.text:
+                return response.text
+        except Exception:
+            pass
+            
+        try:
+            # Usa response.parts se disponibile
+            if hasattr(response, 'parts') and response.parts:
+                return ''.join([part.text for part in response.parts if hasattr(part, 'text')])
+        except Exception:
+            pass
+            
+        try:
+            # Usa response.candidates[0].content.parts come fallback
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    return ''.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+        except Exception:
+            pass
+            
+        # Se tutto fallisce, restituisce una stringa vuota
+        return ""
+    
     def __init__(self, gemini_api_key: Optional[str] = None, use_local_models: bool = True):
         """
         Inizializza l'analizzatore semantico con Google Gemini
@@ -304,7 +341,7 @@ class SemanticAnalyzer:
                 """
                 
                 response = self.model.generate_content(prompt)
-                suggestion_text = response.text.strip()
+                suggestion_text = self._extract_text_from_response(response).strip()
                 
                 # Analizza rilevanza del topic
                 relevance = self.calculate_semantic_similarity(topic, article_content[:1000])
@@ -499,8 +536,9 @@ class SemanticAnalyzer:
             
             response = self.model.generate_content(prompt)
             
-            if response and response.text:
-                return response.text.strip()
+            response_text = self._extract_text_from_response(response)
+            if response and response_text:
+                return response_text.strip()
             else:
                 return "Non è stato possibile generare suggerimenti in questo momento."
                 

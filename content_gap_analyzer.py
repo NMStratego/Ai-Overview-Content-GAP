@@ -46,6 +46,43 @@ class ContentGapAnalyzer:
     con supporto per analisi semantica tramite API
     """
     
+    @staticmethod
+    def _extract_text_from_response(response):
+        """
+        Estrae il testo dalla risposta di Gemini in modo sicuro
+        
+        Args:
+            response: Risposta di Gemini
+            
+        Returns:
+            str: Testo estratto dalla risposta
+        """
+        try:
+            # Prova prima con response.text (metodo semplice)
+            if hasattr(response, 'text') and response.text:
+                return response.text
+        except Exception:
+            pass
+            
+        try:
+            # Usa response.parts se disponibile
+            if hasattr(response, 'parts') and response.parts:
+                return ''.join([part.text for part in response.parts if hasattr(part, 'text')])
+        except Exception:
+            pass
+            
+        try:
+            # Usa response.candidates[0].content.parts come fallback
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    return ''.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+        except Exception:
+            pass
+            
+        # Se tutto fallisce, restituisce una stringa vuota
+        return ""
+    
     def __init__(self, gemini_api_key: Optional[str] = None, use_semantic_analysis: bool = True):
         """
         Inizializza l'analizzatore
@@ -339,8 +376,11 @@ class ContentGapAnalyzer:
             model = genai.GenerativeModel('gemini-2.5-pro')
             response = model.generate_content(prompt)
             
+            # Estrae il testo dalla risposta in modo sicuro
+            response_text = self._extract_text_from_response(response)
+            
             # Restituisce sempre la risposta raw di Gemini senza tentare il parsing JSON
-            print(f"✅ Risposta Gemini ricevuta: {len(response.text)} caratteri")
+            print(f"✅ Risposta Gemini ricevuta: {len(response_text)} caratteri")
             
             return {
                 'total_ai_topics': len(self.ai_overview_topics),
@@ -355,11 +395,11 @@ class ContentGapAnalyzer:
                     'overall_score': 0.75,
                     'overall_quality': 75.0
                 },
-                'analysis_summary': response.text,
+                'analysis_summary': response_text,
                 'analysis_method': 'direct_gemini_simplified',
                 'article_topics': self.extract_topics(article_content)[:15],
                 'weighted_coverage': 75,
-                'gemini_raw_response': response.text
+                'gemini_raw_response': response_text
             }
                 
         except Exception as e:
@@ -582,12 +622,15 @@ class ContentGapAnalyzer:
             model = genai.GenerativeModel('gemini-2.5-pro')
             response = model.generate_content(prompt)
             
+            # Estrae il testo dalla risposta in modo sicuro
+            response_text = self._extract_text_from_response(response)
+            
             import json
             try:
-                recommendations = json.loads(response.text)
+                recommendations = json.loads(response_text)
                 return recommendations[:8]  # Limita a 8 raccomandazioni
             except json.JSONDecodeError:
-                print(f"⚠️ Errore parsing raccomandazioni Gemini: {response.text[:200]}...")
+                print(f"⚠️ Errore parsing raccomandazioni Gemini: {response_text[:200]}...")
                 return self._generate_basic_recommendations(missing_topics)
                 
         except Exception as e:

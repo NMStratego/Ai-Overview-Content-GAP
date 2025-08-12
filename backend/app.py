@@ -28,6 +28,42 @@ RESULTS_FOLDER = 'results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
+def extract_text_from_response(response):
+    """
+    Estrae il testo dalla risposta di Gemini in modo sicuro
+    
+    Args:
+        response: Risposta di Gemini
+        
+    Returns:
+        str: Testo estratto dalla risposta
+    """
+    try:
+        # Prova prima con response.text (metodo semplice)
+        if hasattr(response, 'text') and response.text:
+            return response.text
+    except Exception:
+        pass
+        
+    try:
+        # Usa response.parts se disponibile
+        if hasattr(response, 'parts') and response.parts:
+            return ''.join([part.text for part in response.parts if hasattr(part, 'text')])
+    except Exception:
+        pass
+        
+    try:
+        # Usa response.candidates[0].content.parts come fallback
+        if hasattr(response, 'candidates') and response.candidates:
+            candidate = response.candidates[0]
+            if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                return ''.join([part.text for part in candidate.content.parts if hasattr(part, 'text')])
+    except Exception:
+        pass
+        
+    # Se tutto fallisce, restituisce una stringa vuota
+    return ""
+
 # Istanze globali
 extractor = None
 analyzer = None
@@ -215,10 +251,11 @@ Fornisci una risposta completa e actionable in italiano:"""
         
         response = semantic_analyzer.model.generate_content(full_prompt)
         
-        if response and response.text:
+        response_text = extract_text_from_response(response)
+        if response and response_text:
             return jsonify({
                 'success': True,
-                'response': response.text,
+                'response': response_text,
                 'timestamp': datetime.now().isoformat()
             })
         else:
