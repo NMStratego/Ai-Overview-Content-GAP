@@ -27,27 +27,36 @@ COPY requirements.txt .
 # Installa dipendenze Python
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Supporta sia Railway che Render
+# Imposta variabili d'ambiente per Playwright (compatibili con entrambe le piattaforme)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+
 # Installa browser Playwright con tutte le dipendenze
 RUN playwright install chromium
 RUN playwright install-deps chromium
 
-# Imposta variabili d'ambiente per Playwright
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+# Crea directory alternative per compatibilità con Render
+RUN mkdir -p /opt/render/project/.playwright
+RUN ln -sf /ms-playwright /opt/render/project/.playwright || true
 
-# Verifica che i browser siano installati correttamente
-RUN ls -la /ms-playwright/ || echo "Browser path not found, checking alternatives..."
-RUN find /usr -name "chrome" -type f 2>/dev/null || echo "Chrome executable not found in /usr"
-RUN find /opt -name "chrome" -type f 2>/dev/null || echo "Chrome executable not found in /opt"
+# Verifica installazione browser
+RUN ls -la /ms-playwright/ || echo "Browser path not found"
+RUN ls -la /opt/render/project/.playwright/ || echo "Render path not found"
 
 # Copia lo script di inizializzazione dipendenze
 COPY init_dependencies.py .
 
-# Forza reinstallazione browser se necessario
+# Forza reinstallazione browser se necessario per entrambe le piattaforme
 RUN python3 -c "import subprocess; subprocess.run(['playwright', 'install', 'chromium', '--with-deps'], check=True)"
 
+# Imposta variabili d'ambiente aggiuntive per compatibilità
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/ms-playwright/chromium-*/chrome-linux/chrome
+ENV DISPLAY=:99
+
 # Verifica che Playwright funzioni correttamente
-RUN python3 -c "from playwright.sync_api import sync_playwright; exec('with sync_playwright() as p: browser = p.chromium.launch(headless=True); page = browser.new_page(); page.goto(\"data:text/html,<h1>Test</h1>\"); print(\"✅ Playwright verification successful\"); page.close(); browser.close()')" || (echo '❌ Playwright verification failed' && exit 1)
+RUN python3 -c "import os; from playwright.sync_api import sync_playwright; p = sync_playwright(); browser = p.start().chromium.launch(headless=True); page = browser.new_page(); page.goto('data:text/html,<h1>Test</h1>'); print('✅ Playwright verification successful'); page.close(); browser.close(); p.stop()" || (echo '❌ Playwright verification failed' && find /ms-playwright -name 'chrome' -type f && exit 1)
 
 # Inizializza tutte le dipendenze (NLTK, ecc.)
 RUN python3 init_dependencies.py
@@ -55,12 +64,14 @@ RUN python3 init_dependencies.py
 # Copia codice applicazione
 COPY . .
 
-# Esponi porta Streamlit
-EXPOSE 8501
+# Esponi porta per Railway (usa variabile PORT dinamica)
+EXPOSE 8080
 
-# Imposta variabili d'ambiente per runtime
+# Imposta variabili d'ambiente per runtime Railway
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 ENV DISPLAY=:99
+ENV PORT=8080
 
-# Comando per avviare l'applicazione
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+# Comando per avviare l'applicazione su Railway
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8080", "--server.address=0.0.0.0", "--server.headless=true", "--server.enableCORS=false"]
