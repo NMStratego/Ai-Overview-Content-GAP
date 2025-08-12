@@ -135,10 +135,20 @@ https://your-app-name.railway.app
 - Meno possibilità di errori
 - Railway può comunque monitorare l'app
 
-### Playwright Non Funziona
+### Errore Playwright "Executable doesn't exist"
+**Problema**: Playwright non trova i browser dopo il deploy
+**Causa**: Browser non installati nel path corretto o variabili d'ambiente mancanti
+**Soluzione**:
+- Dockerfile aggiornato con variabili d'ambiente corrette
+- Reinstallazione forzata dei browser durante build
+- Path browser impostato su `/ms-playwright`
+- Verifica automatica durante build del container
+
+### Playwright Non Funziona (Generale)
 - **Browser**: Verificati automaticamente nel Dockerfile
 - **Headless**: Configurato automaticamente
 - **Dipendenze**: Installate durante il build
+- **Runtime**: Variabili d'ambiente configurate per produzione
 
 ## 📊 Vantaggi Railway
 
