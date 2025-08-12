@@ -394,7 +394,7 @@ class AIOverviewExtractor:
                 results_loaded = False
                 for selector in result_selectors:
                     try:
-                        self.page.wait_for_selector(selector, timeout=15000)  # Aumentato a 15 secondi
+                        self.page.wait_for_selector(selector, timeout=30000)  # Aumentato a 30 secondi per gestire caricamenti lenti
                         print(f"✅ Risultati caricati con selettore: {selector}")
                         results_loaded = True
                         break
@@ -404,7 +404,7 @@ class AIOverviewExtractor:
                 if not results_loaded:
                     # Fallback: attendi semplicemente che la pagina si stabilizzi
                     print("⚠️ Selettori specifici falliti, attendo stabilizzazione pagina...")
-                    self.page.wait_for_load_state("networkidle", timeout=20000)
+                    self.page.wait_for_load_state("networkidle", timeout=40000)  # Aumentato a 40 secondi
                     print("✅ Pagina stabilizzata")
                     
             except Exception as results_error:
@@ -434,7 +434,7 @@ class AIOverviewExtractor:
         import time
         start_time = time.time()  # Definizione di start_time per il finally
         extract_start = time.time()
-        max_extract_time = 25  # Timeout massimo per l'estrazione completa
+        max_extract_time = 60  # Timeout massimo per l'estrazione completa (aumentato per gestire caricamenti lenti)
         timeout_seconds = max_extract_time  # Definizione di timeout_seconds per il controllo finale
         
         ai_overview_content = {
@@ -916,7 +916,7 @@ class AIOverviewExtractor:
         """
         import time
         start_time = time.time()
-        max_execution_time = 45  # Timeout massimo di 45 secondi
+        max_execution_time = 90  # Timeout massimo di 90 secondi (aumentato per gestire caricamenti lenti)
         
         try:
             print(f"🔍 Ricerca di: {query}")

@@ -261,7 +261,7 @@ class AIOverviewExtractor:
             search_box.press("Enter")
             
             # Attendi il caricamento dei risultati
-            self.page.wait_for_selector("div[id='search']", timeout=15000)
+            self.page.wait_for_selector("div[id='search']", timeout=30000)  # Aumentato a 30 secondi per gestire caricamenti lenti
             
             # Attendi che l'AI Overview si carichi se presente
             self.page.wait_for_timeout(3000)
