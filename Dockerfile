@@ -56,7 +56,7 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/ms-playwright/chromium-*/chrome-linux/c
 ENV DISPLAY=:99
 
 # Verifica che Playwright funzioni correttamente
-RUN python3 -c "import os; from playwright.sync_api import sync_playwright; p = sync_playwright(); browser = p.start().chromium.launch(headless=True); page = browser.new_page(); page.goto('data:text/html,<h1>Test</h1>'); print('✅ Playwright verification successful'); page.close(); browser.close(); p.stop()" || (echo '❌ Playwright verification failed' && find /ms-playwright -name 'chrome' -type f && exit 1)
+RUN python3 -c "from playwright.sync_api import sync_playwright; exec('with sync_playwright() as p: browser = p.chromium.launch(headless=True); page = browser.new_page(); page.goto(\"data:text/html,<h1>Test</h1>\"); print(\"✅ Playwright verification successful\"); page.close(); browser.close()')" || (echo '❌ Playwright verification failed' && find /ms-playwright -name 'chrome' -type f && exit 1)
 
 # Inizializza tutte le dipendenze (NLTK, ecc.)
 RUN python3 init_dependencies.py
