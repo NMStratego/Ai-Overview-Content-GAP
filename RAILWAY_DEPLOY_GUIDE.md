@@ -119,6 +119,14 @@ https://your-app-name.railway.app
 - NON usare `/` come path di health check
 - La configurazione corretta è già impostata nei file railway.toml e railway.json
 
+### Errore "$PORT is not a valid integer"
+**Problema**: Streamlit non riesce a leggere la variabile PORT
+**Causa**: Sintassi sbagliata per le variabili d'ambiente
+**Soluzione**:
+- Usare `${PORT}` invece di `$PORT` nel comando di avvio
+- Railway richiede la sintassi con parentesi graffe per le variabili
+- La configurazione corretta è: `--server.port=${PORT}`
+
 ### Playwright Non Funziona
 - **Browser**: Verificati automaticamente nel Dockerfile
 - **Headless**: Configurato automaticamente

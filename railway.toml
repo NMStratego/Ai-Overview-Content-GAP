@@ -8,7 +8,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Configurazione deployment
-startCommand = "streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true"
+startCommand = "streamlit run streamlit_app.py --server.port=${PORT} --server.address=0.0.0.0 --server.headless=true"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
