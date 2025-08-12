@@ -13,7 +13,7 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
 # Health check
-healthcheckPath = "/"
+healthcheckPath = "/_stcore/health"
 healthcheckTimeout = 300
 
 # Risorse

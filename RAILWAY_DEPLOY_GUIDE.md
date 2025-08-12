@@ -80,7 +80,7 @@ PORT=8501
 ```
 
 ### Health Check
-- **Path**: `/`
+- **Path**: `/_stcore/health` (endpoint specifico Streamlit)
 - **Timeout**: 300 secondi
 - **Retry**: 3 tentativi
 
@@ -109,7 +109,15 @@ https://your-app-name.railway.app
 ### App Non Si Avvia
 - **Porta**: Railway assegna automaticamente $PORT
 - **Logs**: Controlla Runtime Logs
-- **Health Check**: Verifica che l'app risponda su `/`
+- **Health Check**: Verifica che l'app risponda su `/_stcore/health`
+
+### Errore "Service Unavailable" durante Health Check
+**Problema**: Railway non riesce a verificare lo stato dell'app
+**Causa**: Health check configurato su path sbagliato
+**Soluzione**: 
+- Streamlit usa `/_stcore/health` come endpoint di health check
+- NON usare `/` come path di health check
+- La configurazione corretta è già impostata nei file railway.toml e railway.json
 
 ### Playwright Non Funziona
 - **Browser**: Verificati automaticamente nel Dockerfile
