@@ -31,112 +31,137 @@ class AIOverviewExtractor:
         self.setup_browser()
     
     def setup_browser(self):
-        """Configura Playwright con le migliori opzioni per gestire popup Google (2025)"""
+        """Configura Playwright con le migliori opzioni per gestire popup Google (2025) e fix per Windows"""
         try:
             print("🚀 Inizializzando Playwright (2025)...")
             print(f"📍 Sistema operativo: {os.name}")
             print(f"📍 Directory corrente: {os.getcwd()}")
             
+            # Fix per Windows Python 3.13 - imposta event loop policy
+            if os.name == 'nt':  # Windows
+                import asyncio
+                try:
+                    # Prova a impostare WindowsProactorEventLoopPolicy
+                    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+                    print("✅ Event loop policy impostata per Windows")
+                except Exception as policy_error:
+                    print(f"⚠️ Avviso policy: {policy_error}")
+                    # Fallback: crea nuovo event loop
+                    try:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        print("✅ Nuovo event loop creato")
+                    except Exception as loop_error:
+                        print(f"⚠️ Avviso loop: {loop_error}")
+            
+            # Usa esclusivamente Playwright
             self.playwright = sync_playwright().start()
             print("✅ Playwright avviato con successo")
-            
-            # Opzioni browser ottimizzate per gestire popup di consenso Google
-            browser_args = [
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-blink-features=AutomationControlled',
-                '--disable-web-security',
-                '--disable-features=VizDisplayCompositor',
-                '--disable-extensions',
-                '--disable-default-apps',
-                '--disable-sync',
-                '--disable-translate',
-                '--disable-background-timer-throttling',
-                '--disable-backgrounding-occluded-windows',
-                '--disable-renderer-backgrounding',
-                '--disable-field-trial-config',
-                '--disable-back-forward-cache',
-                '--disable-ipc-flooding-protection',
-                '--no-first-run',
-                '--no-default-browser-check',
-                '--disable-popup-blocking',  # Importante per gestire popup
-                '--disable-notifications',   # Disabilita notifiche
-                '--disable-infobars',        # Disabilita barre info
-                '--disable-save-password-bubble',  # Disabilita popup password
-            ]
-            
-            # Avvia browser Chromium
-            try:
-                print("🌐 Avviando browser Chromium...")
-                self.browser = self.playwright.chromium.launch(
-                    headless=self.headless,
-                    args=browser_args
-                )
-                print("✅ Browser Chromium avviato con successo")
-            except Exception as browser_error:
-                error_msg = str(browser_error)
-                print(f"❌ Errore avvio browser: {error_msg}")
+            self._setup_playwright_browser()
                 
-                if "Executable doesn't exist" in error_msg:
-                    # Verifica se siamo su Render o altra piattaforma
-                    platform_info = os.environ.get('RENDER', 'unknown')
-                    if platform_info or 'render' in os.environ.get('HOSTNAME', '').lower():
-                        raise Exception(
-                            "❌ ERRORE RENDER: Browser Playwright non trovato.\n\n"
-                            "🔧 SOLUZIONI PER RENDER:\n"
-                            "1. 🐳 Assicurati di usare il Dockerfile fornito\n"
-                            "2. 🔄 Ricostruisci il servizio su Render\n"
-                            "3. 📋 Verifica che playwright install sia eseguito nel build\n"
-                            "4. 🔍 Controlla i log di build per errori\n\n"
-                            f"📊 Info ambiente: {platform_info}\n"
-                            f"📁 Directory: {os.getcwd()}\n"
-                            f"🖥️ Sistema: {os.name}"
-                        )
-                    else:
-                        raise Exception(
-                            "❌ ERRORE: Browser Playwright non trovato.\n\n"
-                            "🔧 SOLUZIONI:\n"
-                            "1. 🚀 Deploy su Heroku, Railway, o Render con Docker\n"
-                            "2. 🐳 Usa Docker con immagine playwright\n"
-                            "3. ☁️ Usa servizi cloud come ScrapingBee o Browserless\n"
-                            "4. 💻 Esegui 'playwright install chromium' localmente\n\n"
-                            "📝 Alcune piattaforme non supportano browser per motivi di sicurezza."
-                        )
-                else:
-                    raise Exception(f"❌ Errore browser: {error_msg}")
-            
-            # Crea contesto con impostazioni anti-rilevamento
-            print("🔧 Creando contesto browser...")
-            context = self.browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                locale='it-IT',
-                timezone_id='Europe/Rome',
-                permissions=['geolocation'],  # Gestisce permessi automaticamente
-                extra_http_headers={
-                    'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
-                }
-            )
-            print("✅ Contesto browser creato")
-            
-            # Crea pagina
-            print("📄 Creando nuova pagina...")
-            self.page = context.new_page()
-            print("✅ Pagina creata con successo")
-            
-            # Script anti-rilevamento
-            self.page.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
-                Object.defineProperty(navigator, 'languages', {get: () => ['it-IT', 'it', 'en']});
-                window.chrome = {runtime: {}};
-            """)
-            
-            print("✅ Playwright configurato con successo")
-            
         except Exception as e:
             print(f"❌ Errore nell'inizializzazione Playwright: {e}")
             raise Exception(f"Impossibile inizializzare Playwright: {e}")
+    
+    def _setup_playwright_browser(self):
+        """Setup specifico per Playwright"""
+        # Opzioni browser ottimizzate per gestire popup di consenso Google
+        browser_args = [
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-blink-features=AutomationControlled',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--disable-translate',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-field-trial-config',
+            '--disable-back-forward-cache',
+            '--disable-ipc-flooding-protection',
+            '--no-first-run',
+            '--no-default-browser-check',
+            '--disable-popup-blocking',  # Importante per gestire popup
+            '--disable-notifications',   # Disabilita notifiche
+            '--disable-infobars',        # Disabilita barre info
+            '--disable-save-password-bubble',  # Disabilita popup password
+        ]
+        
+        # Avvia browser Chromium
+        print("🌐 Avviando browser Chromium...")
+        self.browser = self.playwright.chromium.launch(
+            headless=self.headless,
+            args=browser_args
+        )
+        print("✅ Browser Chromium avviato con successo")
+        
+        # Crea contesto con impostazioni anti-rilevamento
+        print("🔧 Creando contesto browser...")
+        context = self.browser.new_context(
+            viewport={'width': 1920, 'height': 1080},
+            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            locale='it-IT',
+            timezone_id='Europe/Rome',
+            permissions=['geolocation'],  # Gestisce permessi automaticamente
+            extra_http_headers={
+                'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8'
+            }
+        )
+        print("✅ Contesto browser creato")
+        
+        # Crea pagina
+        print("📄 Creando nuova pagina...")
+        self.page = context.new_page()
+        print("✅ Pagina creata con successo")
+        
+        # Script anti-rilevamento
+        self.page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            Object.defineProperty(navigator, 'languages', {get: () => ['it-IT', 'it', 'en']});
+            window.chrome = {runtime: {}};
+        """)
+        
+        print("✅ Playwright configurato con successo")
+        self.browser_type = 'playwright'
+    
+
+    
+    def _wait_for_timeout(self, milliseconds):
+        """Attende per il tempo specificato"""
+        self.page.wait_for_timeout(milliseconds)
+    
+    def _find_element(self, selector):
+        """Trova un elemento nella pagina"""
+        return self.page.locator(selector)
+    
+    def _click_element(self, selector):
+        """Clicca un elemento se visibile"""
+        if self.page.locator(selector).count() > 0:
+            element = self.page.locator(selector).first
+            if element.is_visible():
+                element.click()
+                return True
+        return False
+    
+    def _navigate_to(self, url):
+        """Naviga a un URL"""
+        self.page.goto(url, wait_until="domcontentloaded", timeout=10000)
+    
+    def _get_page_content(self):
+        """Ottiene il contenuto della pagina"""
+        return self.page.content()
+    
+    def _find_elements(self, selector):
+        """Trova più elementi nella pagina"""
+        return self.page.locator(selector)
+    
+    def _get_element_text(self, element):
+        """Ottiene il testo di un elemento"""
+        return element.inner_text()
     
     def handle_popups_and_captcha(self):
         """Gestisce popup di consenso Google con strategie avanzate 2025"""
@@ -144,7 +169,7 @@ class AIOverviewExtractor:
             print("🔍 Ricerca popup di consenso Google...")
             
             # Attendi caricamento popup
-            self.page.wait_for_timeout(3000)
+            self._wait_for_timeout(3000)
             
             # Selettori aggiornati per popup Google 2025
             consent_selectors = [
@@ -181,14 +206,11 @@ class AIOverviewExtractor:
             # Prova ogni selettore
             for selector in consent_selectors:
                 try:
-                    # Controlla se l'elemento esiste ed è visibile
-                    if self.page.locator(selector).count() > 0:
-                        element = self.page.locator(selector).first
-                        if element.is_visible():
-                            element.click()
-                            print(f"✅ Popup chiuso con: {selector}")
-                            popup_closed = True
-                            break
+                    # Usa metodo compatibile per cliccare
+                    if self._click_element(selector):
+                        print(f"✅ Popup chiuso con: {selector}")
+                        popup_closed = True
+                        break
                 except Exception as e:
                     continue
             
@@ -206,7 +228,7 @@ class AIOverviewExtractor:
                         if self.page.locator(iframe_selector).count() > 0:
                             frame = self.page.frame_locator(iframe_selector)
                             # Cerca pulsanti nell'iframe
-                            for btn_selector in ["button:has-text('Accept')", "button:has-text('OK')", "button[aria-label*='Accept']"]:  
+                            for btn_selector in ["button:has-text('Accept')", "button:has-text('OK')", "button[aria-label*='Accept']"]:
                                 try:
                                     if frame.locator(btn_selector).count() > 0:
                                         frame.locator(btn_selector).first.click()
@@ -248,7 +270,7 @@ class AIOverviewExtractor:
                     print(f"Errore gestione overlay: {e}")
             
             if popup_closed:
-                self.page.wait_for_timeout(2000)  # Attendi chiusura
+                self._wait_for_timeout(2000)  # Attendi chiusura
                 print("✅ Popup di consenso gestito con successo")
             else:
                 print("ℹ️ Nessun popup di consenso rilevato")
@@ -257,7 +279,7 @@ class AIOverviewExtractor:
             try:
                 if self.page.locator("iframe[src*='recaptcha']").count() > 0:
                     print("⚠️ Captcha rilevato. Attesa 10 secondi...")
-                    self.page.wait_for_timeout(10000)
+                    self._wait_for_timeout(10000)
             except:
                 pass
                 
@@ -276,7 +298,7 @@ class AIOverviewExtractor:
             
             # Naviga a Google con timeout
             try:
-                self.page.goto("https://www.google.com", wait_until="domcontentloaded", timeout=10000)
+                self._navigate_to("https://www.google.com")
                 print("✅ Navigazione a Google completata")
             except Exception as nav_error:
                 print(f"❌ Errore navigazione: {nav_error}")
@@ -310,13 +332,15 @@ class AIOverviewExtractor:
             ]
             
             search_box = None
+            found_selector = None
             for selector in search_selectors:
                 try:
-                    if self.page.locator(selector).count() > 0:
-                        search_box = self.page.locator(selector).first
-                        if search_box.is_visible():
-                            print(f"✅ Campo ricerca trovato: {selector}")
-                            break
+                    element = self._find_element(selector)
+                    if element and element.is_visible():
+                        search_box = element
+                        found_selector = selector
+                        print(f"✅ Campo ricerca trovato: {selector}")
+                        break
                 except Exception as selector_error:
                     print(f"⚠️ Errore selettore {selector}: {selector_error}")
                     continue
@@ -349,7 +373,7 @@ class AIOverviewExtractor:
                 return False
             
             # Attendi che l'AI Overview si carichi se presente (timeout ridotto)
-            self.page.wait_for_timeout(2000)
+            self._wait_for_timeout(2000)
             
             search_duration = time.time() - search_start
             print(f"✅ Ricerca completata in {search_duration:.2f} secondi")
@@ -755,40 +779,72 @@ class AIOverviewExtractor:
                     if show_more_button:
                         try:
                             print("🖱️ Click su 'Mostra altro'...")
-                            show_more_button.click()
                             
-                            # Attendi che il contenuto si espanda
-                            self.page.wait_for_timeout(3000)
+                            # Strategia di click multipla per gestire elementi che intercettano
+                            click_success = False
+                            
+                            # Tentativo 1: Click normale
+                            try:
+                                show_more_button.click(timeout=5000)
+                                click_success = True
+                                print("✅ Click normale riuscito")
+                            except Exception as e1:
+                                print(f"⚠️ Click normale fallito: {str(e1)[:100]}...")
+                                
+                                # Tentativo 2: Force click
+                                try:
+                                    show_more_button.click(force=True, timeout=5000)
+                                    click_success = True
+                                    print("✅ Force click riuscito")
+                                except Exception as e2:
+                                    print(f"⚠️ Force click fallito: {str(e2)[:100]}...")
+                                    
+                                    # Tentativo 3: JavaScript click
+                                    try:
+                                        show_more_button.evaluate("element => element.click()")
+                                        click_success = True
+                                        print("✅ JavaScript click riuscito")
+                                    except Exception as e3:
+                                        print(f"⚠️ JavaScript click fallito: {str(e3)[:100]}...")
+                            
+                            if click_success:
+                                # Attendi che il contenuto si espanda
+                                self.page.wait_for_timeout(3000)
+                            else:
+                                print("❌ Tutti i tentativi di click sono falliti")
+                                ai_overview_content["full_content"] = ai_overview_content["text"]
+                                return ai_overview_content
                             
                             # Estrai il contenuto espanso
                             expanded_text = ai_overview_element.inner_text().strip()
                             
                             # Confronto più intelligente per verificare l'espansione
-                            original_length = len(ai_text)
+                            # Usa il contenuto combinato originale invece del singolo elemento
+                            original_combined = ai_overview_content["text"]
+                            original_length = len(original_combined)
                             expanded_length = len(expanded_text)
                             length_increase = expanded_length - original_length
                             
-                            # Considera espanso se:
-                            # 1. Il testo è più lungo di almeno 50 caratteri
-                            # 2. O se è aumentato di almeno il 20%
-                            if length_increase > 50 or (original_length > 0 and length_increase / original_length > 0.2):
+                            # Utilizza sempre il contenuto più lungo tra quello originale combinato e quello espanso
+                            if expanded_length > original_length:
                                 ai_overview_content["expanded_text"] = expanded_text
                                 ai_overview_content["full_content"] = expanded_text
                                 print(f"✅ Contenuto espanso estratto: {expanded_length} caratteri (+{length_increase})")
                             else:
-                                ai_overview_content["full_content"] = ai_text
-                                print(f"⚠️ Contenuto non espanso significativamente: {original_length} → {expanded_length} caratteri (+{length_increase})")
+                                # Mantieni il contenuto combinato originale se è più lungo
+                                ai_overview_content["full_content"] = original_combined
+                                print(f"ℹ️ Mantenuto contenuto originale combinato: {original_length} caratteri (espanso: {expanded_length})")
                                 
                         except Exception as e:
                             print(f"❌ Errore nel click 'Mostra altro': {e}")
-                            ai_overview_content["full_content"] = ai_text
+                            ai_overview_content["full_content"] = ai_overview_content["text"]
                     else:
-                        ai_overview_content["full_content"] = ai_text
+                        ai_overview_content["full_content"] = ai_overview_content["text"]
                         print("ℹ️ Pulsante 'Mostra altro' non trovato")
                         
                 except Exception as e:
                     print(f"❌ Errore nella gestione 'Mostra altro': {e}")
-                    ai_overview_content["full_content"] = ai_text
+                    ai_overview_content["full_content"] = ai_overview_content["text"]
             
             else:
                 print("❌ AI Overview non trovato nella pagina")

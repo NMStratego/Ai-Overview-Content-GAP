@@ -558,42 +558,73 @@ class AIOverviewExtractor:
                     
                     # Se trova il pulsante, cliccalo
                     if show_more_button:
-                        try:
-                            print("🖱️ Click su 'Mostra altro'...")
-                            show_more_button.click()
+                        try:sprint("🖱️ Click su 'Mostra altro'...")
                             
-                            # Attendi che il contenuto si espanda
-                            self.page.wait_for_timeout(3000)
+                            # Strategia di click multipla per gestire elementi che intercettano
+                            click_success = False
+                            
+                            # Tentativo 1: Click normale
+                            try:
+                                show_more_button.click(timeout=5000)
+                                click_success = True
+                                print("✅ Click normale riuscito")
+                            except Exception as e1:
+                                print(f"⚠️ Click normale fallito: {str(e1)[:100]}...")
+                                
+                                # Tentativo 2: Force click
+                                try:
+                                    show_more_button.click(force=True, timeout=5000)
+                                    click_success = True
+                                    print("✅ Force click riuscito")
+                                except Exception as e2:
+                                    print(f"⚠️ Force click fallito: {str(e2)[:100]}...")
+                                    
+                                    # Tentativo 3: JavaScript click
+                                    try:
+                                        show_more_button.evaluate("element => element.click()")
+                                        click_success = True
+                                        print("✅ JavaScript click riuscito")
+                                    except Exception as e3:
+                                        print(f"⚠️ JavaScript click fallito: {str(e3)[:100]}...")
+                            
+                            if click_success:
+                                # Attendi che il contenuto si espanda
+                                self.page.wait_for_timeout(3000)
+                            else:
+                                print("❌ Tutti i tentativi di click sono falliti")
+                                ai_overview_content["full_content"] = ai_overview_content["text"]
+                                return ai_overview_content
                             
                             # Estrai il contenuto espanso
                             expanded_text = ai_overview_element.inner_text().strip()
                             
                             # Confronto più intelligente per verificare l'espansione
-                            original_length = len(ai_text)
+                            # Usa il contenuto combinato originale invece del singolo elemento
+                            original_combined = ai_overview_content["text"]
+                            original_length = len(original_combined)
                             expanded_length = len(expanded_text)
                             length_increase = expanded_length - original_length
                             
-                            # Considera espanso se:
-                            # 1. Il testo è più lungo di almeno 50 caratteri
-                            # 2. O se è aumentato di almeno il 20%
-                            if length_increase > 50 or (original_length > 0 and length_increase / original_length > 0.2):
+                            # Utilizza sempre il contenuto più lungo tra quello originale combinato e quello espanso
+                            if expanded_length > original_length:
                                 ai_overview_content["expanded_text"] = expanded_text
                                 ai_overview_content["full_content"] = expanded_text
                                 print(f"✅ Contenuto espanso estratto: {expanded_length} caratteri (+{length_increase})")
                             else:
-                                ai_overview_content["full_content"] = ai_text
-                                print(f"⚠️ Contenuto non espanso significativamente: {original_length} → {expanded_length} caratteri (+{length_increase})")
+                                # Mantieni il contenuto combinato originale se è più lungo
+                                ai_overview_content["full_content"] = original_combined
+                                print(f"ℹ️ Mantenuto contenuto originale combinato: {original_length} caratteri (espanso: {expanded_length})")
                                 
                         except Exception as e:
                             print(f"❌ Errore nel click 'Mostra altro': {e}")
-                            ai_overview_content["full_content"] = ai_text
+                            ai_overview_content["full_content"] = ai_overview_content["text"]
                     else:
-                        ai_overview_content["full_content"] = ai_text
+                        ai_overview_content["full_content"] = ai_overview_content["text"]
                         print("ℹ️ Pulsante 'Mostra altro' non trovato")
                         
                 except Exception as e:
                     print(f"❌ Errore nella gestione 'Mostra altro': {e}")
-                    ai_overview_content["full_content"] = ai_text
+                    ai_overview_content["full_content"] = ai_overview_content["text"]
             
             else:
                 print("❌ AI Overview non trovato nella pagina")

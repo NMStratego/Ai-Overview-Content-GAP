@@ -1,0 +1,54 @@
+# Configurazione Railway per Stratego Swat AI Analyzer
+# Deploy automatico con supporto completo Playwright
+
+[build]
+# Railway rileverà automaticamente il Dockerfile
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Configurazione deployment
+startCommand = "streamlit run streamlit_app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Health check
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+# Risorse
+[deploy.resources]
+# Risorse sufficienti per Playwright
+memory = "2GB"
+cpu = "1000m"
+
+# Variabili d'ambiente per Railway
+[env]
+# Streamlit configuration
+STREAMLIT_SERVER_HEADLESS = "true"
+STREAMLIT_SERVER_ENABLE_CORS = "false"
+STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION = "false"
+STREAMLIT_LOGGER_LEVEL = "WARNING"
+STREAMLIT_BROWSER_GATHER_USAGE_STATS = "false"
+
+# Playwright configuration
+PLAYWRIGHT_BROWSERS_PATH = "/ms-playwright"
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "false"
+
+# Python optimization
+PYTHONDONTWRITEBYTECODE = "1"
+PYTHONUNBUFFERED = "1"
+PIP_CACHE_DIR = "/tmp/pip-cache"
+
+# NLTK configuration
+NLTK_DATA = "/app/nltk_data"
+NLTK_DOWNLOAD_DIR = "/app/nltk_data"
+NLTK_TOKENIZE_PRESERVE_LINE = "false"
+NLTK_PUNKT_TAB_FALLBACK = "true"
+
+# Performance optimization
+DEPENDENCY_CACHE_ENABLED = "true"
+BUILD_CACHE_ENABLED = "true"
+
+# Networking
+PORT = "8501"

@@ -248,6 +248,13 @@ st.markdown("""
         letter-spacing: 0.5px !important;
     }
     
+    /* Stili per i label dei widget Streamlit */
+    .stTextInput > label,
+    .stTextArea > label {
+        color: black !important;
+        font-weight: 500 !important;
+    }
+    
     /* Bottoni professionali */
     .stButton > button {
         background: var(--primary-blue) !important;
@@ -428,7 +435,8 @@ import base64
 
 try:
     # Carica e codifica il logo in base64
-    with open('/Users/niksmic/Desktop/AIOVER+2/Ai-Overview-Content-GAP/image/Logo Stratego  (1).svg', 'rb') as f:
+    logo_path = os.path.join(os.path.dirname(__file__), 'image', 'Logo Stratego  (1).svg')
+    with open(logo_path, 'rb') as f:
         logo_data = f.read()
     logo_base64 = base64.b64encode(logo_data).decode()
     
@@ -492,7 +500,7 @@ with tab1:
     st.markdown("""
     <div class="cyber-card">
         <h2 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">🤖 ESTRAZIONE INTELLIGENTE AI OVERVIEW</h2>
-        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Estrai automaticamente i contenuti dall'AI Overview di Google per qualsiasi query di ricerca. Il sistema utilizza automazione browser avanzata per ottenere il contenuto completo.</p>
+        <p style="color: black; font-size: 1.2rem; line-height: 1.6;">Estrai automaticamente i contenuti dall'AI Overview di Google per qualsiasi query di ricerca. Il sistema utilizza automazione browser avanzata per ottenere il contenuto completo.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -574,7 +582,7 @@ with tab1:
         st.markdown(f"""
         <div class="cyber-card">
             <h4 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace;">🔍 Query:</h4>
-            <p style="color: var(--text-neon); font-size: 1.2rem; font-weight: 500;">{data.get('query', 'N/A')}</p>
+            <p style="color: black; font-size: 1.2rem; font-weight: 500;">{data.get('query', 'N/A')}</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -584,7 +592,7 @@ with tab1:
             <div class="cyber-card">
                 <h4 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace;">🤖 Contenuto AI Overview:</h4>
                 <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 15px; padding: 1.5rem; margin-top: 1rem;">
-                    <p style="color: var(--text-neon); font-size: 1.1rem; line-height: 1.6;">{data['ai_overview']}</p>
+                    <p style="color: black; font-size: 1.1rem; line-height: 1.6;">{data['ai_overview']}</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -601,8 +609,8 @@ with tab1:
                 st.markdown(f"""
                 <div style="background: rgba(255, 0, 110, 0.1); border: 1px solid var(--neon-pink); border-radius: 15px; padding: 1rem; margin: 0.5rem 0;">
                     <p style="color: var(--neon-pink); font-weight: 600; margin-bottom: 0.5rem;">Fonte {i}:</p>
-                    <p style="color: var(--text-neon);"><strong>Titolo:</strong> {source.get('title', 'N/A')}</p>
-                    <p style="color: var(--text-neon);"><strong>URL:</strong> <a href="{source.get('url', '#')}" target="_blank" style="color: var(--neon-blue);">{source.get('url', 'N/A')}</a></p>
+                    <p style="color: black;"><strong>Titolo:</strong> {source.get('title', 'N/A')}</p>
+                    <p style="color: black;"><strong>URL:</strong> <a href="{source.get('url', '#')}" target="_blank" style="color: var(--neon-blue);">{source.get('url', 'N/A')}</a></p>
                 </div>
                 """, unsafe_allow_html=True)
         
@@ -610,7 +618,7 @@ with tab1:
         if 'timestamp' in data:
             st.markdown(f"""
             <div class="cyber-card">
-                <p style="color: var(--text-neon); font-size: 0.9rem; text-align: center; opacity: 0.8;">⏰ Estratto il: {data['timestamp']}</p>
+                <p style="color: black; font-size: 0.9rem; text-align: center; opacity: 0.8;">⏰ Estratto il: {data['timestamp']}</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -716,7 +724,7 @@ with tab2:
     st.markdown("""
     <div class="cyber-card">
         <h2 style="color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">💬 CONTENT GAP ANALYZER</h2>
-        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Analizza il gap di contenuto con l'intelligenza artificiale avanzata. Chat interattiva per insights approfonditi.</p>
+        <p style="color: black; font-size: 1.2rem; line-height: 1.6;">Analizza il gap di contenuto con l'intelligenza artificiale avanzata. Chat interattiva per insights approfonditi.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -840,7 +848,7 @@ with tab3:
     st.markdown("""
     <div class="cyber-card">
         <h2 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); font-family: 'Orbitron', monospace; margin-bottom: 2rem;">🏪 MAGAZZINO FILE ESTRATTI</h2>
-        <p style="color: var(--text-neon); font-size: 1.2rem; line-height: 1.6;">Carica i tuoi file AI Overview estratti e inviali direttamente al Content Gap Analyzer per l'analisi.</p>
+        <p style="color: black; font-size: 1.2rem; line-height: 1.6;">Carica i tuoi file AI Overview estratti e inviali direttamente al Content Gap Analyzer per l'analisi.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -910,7 +918,7 @@ with tab3:
         </div>
         """, unsafe_allow_html=True)
         
-        for file_id, file_data in st.session_state.uploaded_files.items():
+        for file_id, file_data in list(st.session_state.uploaded_files.items()):
             col1, col2, col3 = st.columns([2, 1, 1])
             
             with col1:
@@ -921,8 +929,8 @@ with tab3:
                 st.markdown(f"""
                 <div style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
                     <p style="color: var(--neon-blue); margin: 0; font-weight: bold;">📄 {file_data['name']}</p>
-                    <p style="color: var(--text-neon); margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
-                    <p style="color: var(--text-neon); margin: 0; font-size: 0.8rem;">Parole: {word_count} | Caricato: {file_data['upload_time']}</p>
+                    <p style="color: black; margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
+                    <p style="color: black; margin: 0; font-size: 0.8rem;">Parole: {word_count} | Caricato: {file_data['upload_time']}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -1024,8 +1032,8 @@ with tab3:
                     st.markdown(f"""
                     <div style="background: rgba(179, 71, 217, 0.1); border: 1px solid var(--neon-purple); border-radius: 10px; padding: 0.8rem; margin: 0.5rem 0;">
                         <p style="color: var(--neon-purple); margin: 0; font-weight: bold;">📄 {file}</p>
-                        <p style="color: var(--text-neon); margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
-                        <p style="color: var(--text-neon); margin: 0; font-size: 0.8rem;">Parole: {word_count}</p>
+                        <p style="color: black; margin: 0.2rem 0; font-size: 0.9rem;">Query: {query[:50]}{'...' if len(query) > 50 else ''}</p>
+                        <p style="color: black; margin: 0; font-size: 0.8rem;">Parole: {word_count}</p>
                     </div>
                     """, unsafe_allow_html=True)
                 except:
