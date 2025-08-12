@@ -380,16 +380,40 @@ class AIOverviewExtractor:
                 print(f"❌ Errore inserimento query: {input_error}")
                 return False
             
-            # Attendi il caricamento dei risultati con timeout ridotto
+            # Attendi il caricamento dei risultati con timeout aumentato
             try:
-                self.page.wait_for_selector("div[id='search']", timeout=10000)
-                print("✅ Risultati caricati")
+                # Prova diversi selettori per i risultati
+                result_selectors = [
+                    "div[id='search']",
+                    "div[id='rso']",
+                    "div[data-ved]",
+                    "#search",
+                    ".g"
+                ]
+                
+                results_loaded = False
+                for selector in result_selectors:
+                    try:
+                        self.page.wait_for_selector(selector, timeout=15000)  # Aumentato a 15 secondi
+                        print(f"✅ Risultati caricati con selettore: {selector}")
+                        results_loaded = True
+                        break
+                    except Exception:
+                        continue
+                
+                if not results_loaded:
+                    # Fallback: attendi semplicemente che la pagina si stabilizzi
+                    print("⚠️ Selettori specifici falliti, attendo stabilizzazione pagina...")
+                    self.page.wait_for_load_state("networkidle", timeout=20000)
+                    print("✅ Pagina stabilizzata")
+                    
             except Exception as results_error:
                 print(f"❌ Errore caricamento risultati: {results_error}")
-                return False
+                # Non fallire immediatamente, prova comunque l'estrazione
+                print("⚠️ Continuo comunque con l'estrazione...")
             
-            # Attendi che l'AI Overview si carichi se presente (timeout ridotto)
-            self._wait_for_timeout(2000)
+            # Attendi che l'AI Overview si carichi se presente
+            self._wait_for_timeout(3000)  # Aumentato a 3 secondi
             
             search_duration = time.time() - search_start
             print(f"✅ Ricerca completata in {search_duration:.2f} secondi")
