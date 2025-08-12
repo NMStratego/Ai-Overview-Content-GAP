@@ -27,8 +27,7 @@ COPY requirements.txt .
 # Installa dipendenze Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Supporta sia Railway che Render
-# Imposta variabili d'ambiente per Playwright (compatibili con entrambe le piattaforme)
+# Configurazione Playwright per Railway
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
@@ -37,13 +36,9 @@ ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 RUN playwright install chromium
 RUN playwright install-deps chromium
 
-# Crea directory alternative per compatibilità con Render
-RUN mkdir -p /opt/render/project/.playwright
-RUN ln -sf /ms-playwright /opt/render/project/.playwright || true
-
 # Verifica installazione browser
 RUN ls -la /ms-playwright/ || echo "Browser path not found"
-RUN ls -la /opt/render/project/.playwright/ || echo "Render path not found"
+RUN find /ms-playwright -name "chrome" -type f || echo "Chrome executable not found"
 
 # Copia lo script di inizializzazione dipendenze
 COPY init_dependencies.py .
@@ -51,7 +46,7 @@ COPY init_dependencies.py .
 # Forza reinstallazione browser se necessario per entrambe le piattaforme
 RUN python3 -c "import subprocess; subprocess.run(['playwright', 'install', 'chromium', '--with-deps'], check=True)"
 
-# Imposta variabili d'ambiente aggiuntive per compatibilità
+# Imposta variabili d'ambiente per Railway
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/ms-playwright/chromium-*/chrome-linux/chrome
 ENV DISPLAY=:99
 
